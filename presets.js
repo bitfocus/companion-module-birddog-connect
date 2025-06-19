@@ -38,7 +38,7 @@ export function getPresets() {
 				name: `Endpoint ${name} Status`,
 				options: {},
 				style: {
-					text: `${name}\\n\\n$(birddog-cloud:endpoint_status_${variableName})`,
+					text: `${name}\\n\\n$(birddog-connect:endpoint_status_${variableName})`,
 					size: '7',
 					color: ColorWhite,
 					bgcolor: ColorBlack,
@@ -192,7 +192,7 @@ export function getPresets() {
 				name: `Status ${name}`,
 				options: {},
 				style: {
-					text: `${name}\\n\\n$(birddog-cloud:connection_status_${variableName})`,
+					text: `${name}\\n\\n$(birddog-connect:connection_status_${variableName})`,
 					size: '7',
 					color: ColorWhite,
 					bgcolor: ColorBlack,
@@ -282,7 +282,7 @@ export function getPresets() {
 				name: `Status ${name}`,
 				options: {},
 				style: {
-					text: `${name}\\n\\n$(birddog-cloud:recording_status_${variableName})`,
+					text: `${name}\\n\\n$(birddog-connect:recording_status_${variableName})`,
 					size: '7',
 					color: ColorWhite,
 					bgcolor: ColorBlack,
@@ -374,7 +374,7 @@ export function getPresets() {
 				name: `Status ${name}`,
 				options: {},
 				style: {
-					text: `${name}\\n\\n$(birddog-cloud:${type}_status_${id})`,
+					text: `${name}\\n\\n$(birddog-connect:${type}_status_${id})`,
 					size: '7',
 					color: ColorWhite,
 					bgcolor: ColorBlack,

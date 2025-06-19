@@ -1,12 +1,12 @@
 {
-	"id": "birddog-cloud",
-	"name": "birddog-cloud",
-	"shortname": "BirdDog Cloud",
-	"description": "Module for BirdDog Cloud",
-	"version": "1.0.2",
+	"id": "birddog-connect",
+	"name": "birddog-connect",
+	"shortname": "BirdDog Connect",
+	"description": "Module for BirdDog Connect",
+	"version": "0.0.0",
 	"license": "MIT",
-	"repository": "git+https://github.com/bitfocus/companion-module-birddog-cloud.git",
-	"bugs": "https://github.com/bitfocus/companion-module-birddog-cloud/issues",
+	"repository": "git+https://github.com/bitfocus/companion-module-birddog-connect.git",
+	"bugs": "https://github.com/bitfocus/companion-module-birddog-connect/issues",
 	"maintainers": [
 		{
 			"name": "Bryce Seifert",
@@ -19,8 +19,8 @@
 		"apiVersion": "0.0.0",
 		"entrypoint": "../main.js"
 	},
-	"legacyIds": [],
+	"legacyIds": ["birddog-cloud"],
 	"manufacturer": "BirdDog",
-	"products": ["Cloud"],
-	"keywords": ["BirdDog", "Cloud"]
+	"products": ["Connect"],
+	"keywords": ["BirdDog", "Connect"]
 }

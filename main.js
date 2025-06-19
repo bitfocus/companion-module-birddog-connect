@@ -87,7 +87,7 @@ class BirdDogCloudInstance extends InstanceBase {
 	async initConnection() {
 		let token = await this.getRefreshToken()
 		if (token) {
-			this.log('info', 'Connected to BirdDog Cloud')
+			this.log('info', 'Connected to BirdDog Connect')
 			this.updateStatus(InstanceStatus.Ok)
 
 			this.getCloudInfo()

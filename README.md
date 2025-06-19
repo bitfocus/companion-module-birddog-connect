@@ -1,11 +1,21 @@
-# companion-module-birddog-cloud
+# companion-module-birddog-connect
 
 See [HELP.md](./companion/HELP.md) and [LICENSE](./LICENSE)
 
 ## Changelog
 
+### v1.0.3
+
+- Rename module to align with new BirdDog Connect branding
+
+### v1.0.2
+
+- Security updates for dependencies
+
+### v1.0.1
+
+- Security updates for dependencies
+
 ### v1.0.0
 
 - Initial release
-
-![28ef5329-b83c-4e7a-bc86-061b2f8dbc51](https://github.com/bitfocus/companion-module-birddog-cloud/assets/4297325/c6ce4a9a-b089-4949-a3c5-ceb774204550)
