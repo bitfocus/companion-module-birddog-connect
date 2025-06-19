@@ -121,7 +121,7 @@ export function getActions() {
 				let recordings = []
 				let state
 				let recorderSources = this.states.recordings.filter(
-					(recording) => recording.recorderId === action.options.recorder
+					(recording) => recording.recorderId === action.options.recorder,
 				)
 
 				if (recorderSources) {
@@ -133,7 +133,6 @@ export function getActions() {
 
 					if (recordings.length > 1) {
 						field = 'ids'
-						recordings = recordings
 						state = action.options.command === 'START' ? 'START_MULTIPLE' : 'STOP_MULTIPLE'
 					} else {
 						field = 'id'
