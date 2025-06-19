@@ -133,7 +133,6 @@ export function getActions() {
 
 					if (recordings.length > 1) {
 						field = 'ids'
-						recordings = recordings
 						state = action.options.command === 'START' ? 'START_MULTIPLE' : 'STOP_MULTIPLE'
 					} else {
 						field = 'id'
