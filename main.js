@@ -5,7 +5,6 @@ import { getPresets } from './presets.js'
 import { getVariables } from './variables.js'
 import { upgradeScripts } from './upgrades.js'
 
-import fetch from 'node-fetch'
 import SCClient from 'socketcluster-client'
 
 class BirdDogCloudInstance extends InstanceBase {
@@ -116,7 +115,7 @@ class BirdDogCloudInstance extends InstanceBase {
 
 		//Create socket
 		this.socket = SCClient.create({
-			hostname: 'app.birddog.cloud',
+			hostname: 'connect.birddog.tv',
 			secure: true,
 			path: '/socketcluster/',
 			authEngine: this.websocketAuthEngine,
@@ -221,7 +220,7 @@ class BirdDogCloudInstance extends InstanceBase {
 
 	//Authentication Requests
 	async getRefreshToken() {
-		return fetch(`https://app.birddog.cloud/api/refresh-token`, {
+		return fetch(`https://connect.birddog.tv/api/refresh-token`, {
 			method: 'get',
 			headers: { 'Content-type': 'application/json', Authorization: `Bearer ${this.config.token}` },
 		})
@@ -269,7 +268,7 @@ class BirdDogCloudInstance extends InstanceBase {
 	}
 
 	async getWebsocketAuth() {
-		return fetch(`https://app.birddog.cloud/api/load-token`, {
+		return fetch(`https://connect.birddog.tv/api/load-token`, {
 			method: 'get',
 			headers: { 'Content-type': 'application/json', Authorization: `Bearer ${this.cloud.refreshToken}` },
 		})
@@ -455,7 +454,7 @@ class BirdDogCloudInstance extends InstanceBase {
 
 	//Send Commands to Cloud API
 	async sendCommand(cmd, type, params) {
-		let url = `https://app.birddog.cloud/api/${cmd}`
+		let url = `https://connect.birddog.tv/api/${cmd}`
 		let options = {}
 
 		let fresh = await this.checkTokenExpiry()
@@ -532,7 +531,7 @@ class BirdDogCloudInstance extends InstanceBase {
 							this.choices.presentersSources.push({ id: firstSource, label: firstSource })
 						}
 					}
-					if (videoSources.length > 0) {
+					if (videoSources?.length > 0) {
 						videoSources.forEach((source) => {
 							let index = this.choices.presentersSources.findIndex((el) => el.id === source)
 							if (index === -1) {
@@ -798,8 +797,8 @@ class BirdDogCloudInstance extends InstanceBase {
 			return connection.parameters.displayName
 		} else {
 			if (connection.parameters.connectionType === 'MULTI_VIEW') {
-				let sourceCount = connection.parameters.videoSources.length ? connection.parameters.videoSources.length : ''
-				return `MV ${sourceCount}`
+				let sourceCount = connection.parameters.videoSources?.length ? connection.parameters.videoSources.length : ''
+				return `MV ${sourceCount + 2}`
 			} else {
 				if (connection.parameters.videoSources?.[0]) {
 					return connection.parameters.videoSources[0].name
