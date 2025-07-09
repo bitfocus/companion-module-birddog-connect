@@ -16,12 +16,12 @@
 	},
 	"dependencies": {
 		"@companion-module/base": "~1.12.1",
-		"eslint": "^9.29.0",
+		"eslint": "^9.30.1",
 		"socketcluster-client": "^19.2.7"
 	},
 	"devDependencies": {
 		"@companion-module/tools": "^2.3.0",
-		"prettier": "^3.6.1"
+		"prettier": "^3.6.2"
 	},
 	"engines": {
 		"node": "^22.12"
