@@ -523,7 +523,10 @@ class BirdDogCloudInstance extends InstanceBase {
 
 			if (connection.parameters.multiView) {
 				if (connection.parameters.multiView.layout.match('PRESENTER_')) {
-					this.choices.presenters.push({ id: id, label: name })
+					let presenterIndex = this.choices.presenters.findIndex((el) => el.id === id)
+					if (presenterIndex === -1) {
+						this.choices.presenters.push({ id: id, label: name })
+					}
 
 					let firstSource = connection?.parameters?.multiView?.firstVideoSource
 					let videoSources = connection?.parameters?.videoSources
@@ -550,7 +553,11 @@ class BirdDogCloudInstance extends InstanceBase {
 				}
 			}
 
-			this.choices.connections.push({ id: id, label: name })
+			let connectionIndex = this.choices.connections.findIndex((el) => el.id === id)
+			if (connectionIndex === -1) {
+				this.choices.connections.push({ id: id, label: name })
+			}
+
 			this.setVariableValues({
 				[`connection_status_${name}`]: connection.state === 'CONNECTED' ? 'Connected' : 'Stopped',
 			})
@@ -590,7 +597,10 @@ class BirdDogCloudInstance extends InstanceBase {
 			let id = endpoint.id
 			let name = endpoint.name
 
-			this.choices.endpoints.push({ id: id, label: name })
+			let endpointIndex = this.choices.endpoints.findIndex((el) => el.id === id)
+			if (endpointIndex === -1) {
+				this.choices.endpoints.push({ id: id, label: name })
+			}
 
 			endpoint.ndiSources?.forEach((device) => {
 				let index = this.choices.audioDevices.findIndex((el) => el.id === device)
@@ -641,7 +651,10 @@ class BirdDogCloudInstance extends InstanceBase {
 			let id = recorder.id
 			let name = recorder.name
 
-			this.choices.recorders.push({ id: id, label: name })
+			let recorderIndex = this.choices.recorders.findIndex((el) => el.id === id)
+			if (recorderIndex === -1) {
+				this.choices.recorders.push({ id: id, label: name })
+			}
 		})
 		//After recorders are set, get recording info
 		this.sendCommand('recordings', 'get')
@@ -657,7 +670,10 @@ class BirdDogCloudInstance extends InstanceBase {
 				name = `${recorder.name}-${name}`
 			}
 
-			this.choices.recordings.push({ id: id, label: name })
+			let recordingIndex = this.choices.recordings.findIndex((el) => el.id === id)
+			if (recordingIndex === -1) {
+				this.choices.recordings.push({ id: id, label: name })
+			}
 		})
 		this.initActions()
 		this.initFeedbacks()
@@ -684,7 +700,10 @@ class BirdDogCloudInstance extends InstanceBase {
 			let id = encoder.id
 			let name = encoder.name
 
-			this.choices.encoders.push({ id: id, label: name })
+			let encoderIndex = this.choices.encoders.findIndex((el) => el.id === id)
+			if (encoderIndex === -1) {
+				this.choices.encoders.push({ id: id, label: name })
+			}
 		})
 		//After recorders are set, get recording info
 		this.sendCommand('encoder-sessions', 'get')
@@ -701,7 +720,10 @@ class BirdDogCloudInstance extends InstanceBase {
 				name = `${session.parameters?.input} --> ${session.parameters?.output?.displayName}`
 			}
 
-			this.choices.encoderSessions.push({ id: id, label: name, type: type })
+			let encoderSessionIndex = this.choices.encoderSessions.findIndex((el) => el.id === id)
+			if (encoderSessionIndex === -1) {
+				this.choices.encoderSessions.push({ id: id, label: name, type: type })
+			}
 		})
 		this.initActions()
 		this.initFeedbacks()
