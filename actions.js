@@ -211,14 +211,14 @@ export function getActions() {
 					default: 1,
 					min: 0,
 					max: 2,
-					isVisible: (options) => options.fade === true,
+					isVisibleExpression: '$(options:fade) === true',
 				},
 				{
 					type: 'checkbox',
 					label: 'Use Custom Source',
 					id: 'custom',
 					default: false,
-					isVisible: (options) => options.layout === 'setFullscreenVideo' || options.layout === 'setMixed',
+					isVisibleExpression: `$(options:layout) === 'setFullscreenVideo' || $(options:layout) === 'setMixed'`,
 				},
 				{
 					type: 'dropdown',
@@ -226,8 +226,7 @@ export function getActions() {
 					id: 'source',
 					choices: this.choices.presentersSources,
 					default: this.choices.presentersSources?.[0]?.id,
-					isVisible: (options) =>
-						(options.layout === 'setFullscreenVideo' || options.layout === 'setMixed') && options.custom === true,
+					isVisibleExpression: `($(options:layout) === 'setFullscreenVideo' || $(options:layout) === 'setMixed') && $(options:custom) === true`,
 				},
 			],
 			callback: (action) => {
@@ -303,7 +302,8 @@ export function getActions() {
 					id: 'connection',
 					choices: this.choices.presenters,
 					default: this.choices.presenters?.[0]?.id,
-					isVisible: (options) => !options.local,
+
+					isVisibleExpression: '!$(options:local)',
 				},
 				{
 					type: 'dropdown',
@@ -311,7 +311,8 @@ export function getActions() {
 					id: 'device',
 					choices: this.choices.ndiSources,
 					default: this.choices.ndiSources?.[0]?.id,
-					isVisible: (options) => !options.local,
+
+					isVisibleExpression: '!$(options:local)',
 				},
 				{
 					type: 'checkbox',
@@ -336,7 +337,7 @@ export function getActions() {
 					max: 1,
 					step: 0.1,
 					range: true,
-					isVisible: (options) => options.ptz !== 'stop',
+					isVisibleExpression: '$(options:ptz) !== "stop"',
 				},
 			],
 			callback: (action) => {
