@@ -882,6 +882,52 @@ export function getPresets() {
 				],
 				feedbacks: [],
 			}
+			presets[`presenter_${name}_audio_header`] = {
+				category: 'Presenter Audio Control',
+				name: `Audio Control - ${name}`,
+				type: 'text',
+			}
+			this.choices.audioDevices.forEach((audioDevice) => {
+				let audioId = audioDevice.id
+				presets[`presenter_${name}_audio_${audioId}`] = {
+					type: 'button',
+					category: 'Presenter Audio Control',
+					name: `Presenter ${name} Audio Source ${audioId}`,
+					options: {},
+					style: {
+						text: `${name} 🔊\\n${audioId}`,
+						size: 'auto',
+						color: ColorWhite,
+						bgcolor: ColorBlack,
+					},
+					steps: [
+						{
+							down: [
+								{
+									actionId: 'presenterAudioDevice',
+									options: {
+										connection: id,
+										audio: audioId,
+									},
+								},
+							],
+							up: [],
+						},
+					],
+					feedbacks: [
+						{
+							feedbackId: 'presenterAudioDevice',
+							options: {
+								connection: `${id}`,
+								audio: audioId,
+							},
+							style: {
+								bgcolor: ColorGreen,
+							},
+						},
+					],
+				}
+			})
 		})
 	}
 
