@@ -72,46 +72,46 @@ export function getPresets() {
 			let name = connection.id
 			name = this.getConnectionDisplayName(connection)
 			let variableName = name.replace(/[\W]/gi, '_')
-			;((presets[`connection_${name}_header`] = {
+			presets[`connection_${name}_header`] = {
 				category: 'Connection Control',
 				name: `Connection Control - ${name}`,
 				type: 'text',
-			}),
-				(presets[`connection_${name}_toggle`] = {
-					type: 'button',
-					category: 'Connection Control',
-					name: `Start/Stop ${name}`,
-					options: {},
-					style: {
-						text: `START/STOP\\n${name}`,
-						size: 'auto',
-						color: ColorWhite,
-						bgcolor: ColorBlack,
-					},
-					steps: [
-						{
-							down: [
-								{
-									actionId: 'connectionControl',
-									options: {
-										connection: id,
-										command: 'TOGGLE',
-									},
+			}
+			presets[`connection_${name}_toggle`] = {
+				type: 'button',
+				category: 'Connection Control',
+				name: `Start/Stop ${name}`,
+				options: {},
+				style: {
+					text: `START/STOP\\n${name}`,
+					size: 'auto',
+					color: ColorWhite,
+					bgcolor: ColorBlack,
+				},
+				steps: [
+					{
+						down: [
+							{
+								actionId: 'connectionControl',
+								options: {
+									connection: id,
+									command: 'TOGGLE',
 								},
-							],
-							up: [],
-						},
-					],
-					feedbacks: [
-						{
-							feedbackId: 'connectionStatus',
-							options: {
-								connection: `${id}`,
 							},
-							style: {},
+						],
+						up: [],
+					},
+				],
+				feedbacks: [
+					{
+						feedbackId: 'connectionStatus',
+						options: {
+							connection: `${id}`,
 						},
-					],
-				}))
+						style: {},
+					},
+				],
+			}
 			presets[`connection_${name}_start`] = {
 				type: 'button',
 				category: 'Connection Control',
