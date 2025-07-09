@@ -22,11 +22,22 @@ class BirdDogCloudInstance extends InstanceBase {
 		this.states = {} //Channel data from Cloud
 		this.states.presenters = {}
 		this.states.ptzDevice = {}
-		this.choices = {} //Dropdown options for Companion
+		this.choices = {
+			connections: [],
+			presenters: [],
+			presentersSources: [],
+			endpoints: [],
+			audioDevices: [],
+			ndiSources: [],
+			recorders: [],
+			recordings: [],
+			encoders: [],
+			encoderSessions: [],
+		} //Dropdown options for Companion
 
 		//Auth setup for Socketcluster
 		this.websocketAuthEngine = {
-			saveToken: function (name, token, options) {
+			saveToken: function (name, token, _options) {
 				this.auth = { [`${name}`]: token }
 			},
 			removeToken: function (name) {
@@ -138,14 +149,14 @@ class BirdDogCloudInstance extends InstanceBase {
 		})()
 		;(async () => {
 			while (this.socket) {
-				for await (let event of this.socket.listener('disconnect')) {
+				for await (let _event of this.socket.listener('disconnect')) {
 					//console.log('Socket disconnected')
 				}
 			}
 		})()
 		;(async () => {
 			while (this.socket) {
-				for await (let event of this.socket.listener('deauthenticate')) {
+				for await (let _event of this.socket.listener('deauthenticate')) {
 					this.getWebsocketAuth()
 					//console.log(`Socket lost authentication`)
 				}
@@ -153,8 +164,8 @@ class BirdDogCloudInstance extends InstanceBase {
 		})()
 		;(async () => {
 			while (this.socket) {
-				for await (let event of this.socket.listener('subscribeStateChange')) {
-					//console.log(event)
+				for await (let _event of this.socket.listener('subscribeStateChange')) {
+					//console.log(_event)
 				}
 			}
 		})()
@@ -179,8 +190,8 @@ class BirdDogCloudInstance extends InstanceBase {
 		})()
 		;(async () => {
 			while (this.socket) {
-				for await (let event of this.socket.listener('message')) {
-					//console.log(event)
+				for await (let _event of this.socket.listener('message')) {
+					//console.log(_event)
 				}
 			}
 		})()
@@ -495,9 +506,8 @@ class BirdDogCloudInstance extends InstanceBase {
 
 	async sendPresenterCommand(command, body) {
 		;(async () => {
-			let result
 			try {
-				result = await this.socket.invoke(command, body)
+				await this.socket.invoke(command, body)
 			} catch (error) {
 				this.log('debug', `Error sending presenter command: ${error}`)
 			}
@@ -506,10 +516,6 @@ class BirdDogCloudInstance extends InstanceBase {
 
 	//Channel Specific Functions
 	setupConnections() {
-		this.choices.connections = []
-		this.choices.presenters = []
-		this.choices.presentersSources = []
-
 		this.states.connections.forEach((connection) => {
 			let id = connection.id
 			let name = connection.id
@@ -517,7 +523,10 @@ class BirdDogCloudInstance extends InstanceBase {
 
 			if (connection.parameters.multiView) {
 				if (connection.parameters.multiView.layout.match('PRESENTER_')) {
-					this.choices.presenters.push({ id: id, label: name })
+					let presenterIndex = this.choices.presenters.findIndex((el) => el.id === id)
+					if (presenterIndex === -1) {
+						this.choices.presenters.push({ id: id, label: name })
+					}
 
 					let firstSource = connection?.parameters?.multiView?.firstVideoSource
 					let videoSources = connection?.parameters?.videoSources
@@ -544,7 +553,11 @@ class BirdDogCloudInstance extends InstanceBase {
 				}
 			}
 
-			this.choices.connections.push({ id: id, label: name })
+			let connectionIndex = this.choices.connections.findIndex((el) => el.id === id)
+			if (connectionIndex === -1) {
+				this.choices.connections.push({ id: id, label: name })
+			}
+
 			this.setVariableValues({
 				[`connection_status_${name}`]: connection.state === 'CONNECTED' ? 'Connected' : 'Stopped',
 			})
@@ -580,15 +593,14 @@ class BirdDogCloudInstance extends InstanceBase {
 	}
 
 	setupEndpoints() {
-		this.choices.endpoints = []
-		this.choices.audioDevices = []
-		this.choices.ndiSources = []
-
 		this.states.endpoints.forEach((endpoint) => {
 			let id = endpoint.id
 			let name = endpoint.name
 
-			this.choices.endpoints.push({ id: id, label: name })
+			let endpointIndex = this.choices.endpoints.findIndex((el) => el.id === id)
+			if (endpointIndex === -1) {
+				this.choices.endpoints.push({ id: id, label: name })
+			}
 
 			endpoint.ndiSources?.forEach((device) => {
 				let index = this.choices.audioDevices.findIndex((el) => el.id === device)
@@ -635,19 +647,20 @@ class BirdDogCloudInstance extends InstanceBase {
 	}
 
 	setupRecorders() {
-		this.choices.recorders = []
 		this.states.recorders.forEach((recorder) => {
 			let id = recorder.id
 			let name = recorder.name
 
-			this.choices.recorders.push({ id: id, label: name })
+			let recorderIndex = this.choices.recorders.findIndex((el) => el.id === id)
+			if (recorderIndex === -1) {
+				this.choices.recorders.push({ id: id, label: name })
+			}
 		})
 		//After recorders are set, get recording info
 		this.sendCommand('recordings', 'get')
 	}
 
 	setupRecordings() {
-		this.choices.recordings = []
 		this.states.recordings.forEach((recording) => {
 			let id = recording.id
 			let name = recording.parameters.input
@@ -657,7 +670,10 @@ class BirdDogCloudInstance extends InstanceBase {
 				name = `${recorder.name}-${name}`
 			}
 
-			this.choices.recordings.push({ id: id, label: name })
+			let recordingIndex = this.choices.recordings.findIndex((el) => el.id === id)
+			if (recordingIndex === -1) {
+				this.choices.recordings.push({ id: id, label: name })
+			}
 		})
 		this.initActions()
 		this.initFeedbacks()
@@ -680,19 +696,20 @@ class BirdDogCloudInstance extends InstanceBase {
 	}
 
 	setupEncoders() {
-		this.choices.encoders = []
 		this.states.encoders.forEach((encoder) => {
 			let id = encoder.id
 			let name = encoder.name
 
-			this.choices.encoders.push({ id: id, label: name })
+			let encoderIndex = this.choices.encoders.findIndex((el) => el.id === id)
+			if (encoderIndex === -1) {
+				this.choices.encoders.push({ id: id, label: name })
+			}
 		})
 		//After recorders are set, get recording info
 		this.sendCommand('encoder-sessions', 'get')
 	}
 
 	setupEncoderSessions() {
-		this.choices.encoderSessions = []
 		this.states['encoder-sessions'].forEach((session) => {
 			let id = session.id
 			let name = session.id
@@ -703,7 +720,10 @@ class BirdDogCloudInstance extends InstanceBase {
 				name = `${session.parameters?.input} --> ${session.parameters?.output?.displayName}`
 			}
 
-			this.choices.encoderSessions.push({ id: id, label: name, type: type })
+			let encoderSessionIndex = this.choices.encoderSessions.findIndex((el) => el.id === id)
+			if (encoderSessionIndex === -1) {
+				this.choices.encoderSessions.push({ id: id, label: name, type: type })
+			}
 		})
 		this.initActions()
 		this.initFeedbacks()
@@ -718,7 +738,6 @@ class BirdDogCloudInstance extends InstanceBase {
 
 		if ('isStarted' in newData) {
 			let encoderSession = this.choices.encoderSessions?.find(({ id }) => id === encoderSessionId)
-			let name = encoderSession.label
 			let type = encoderSession.type
 
 			this.setVariableValues({
@@ -752,27 +771,36 @@ class BirdDogCloudInstance extends InstanceBase {
 	processPresenterUpdate(type, connectionId, message, connection) {
 		switch (type) {
 			case 'setFullscreen':
-				let source = message.data.sourceName
-				if (connection.parameters?.multiView?.mainSource === source) {
-					this.states.presenters[connectionId].layout = 'setFullscreenMain'
-				} else {
-					this.states.presenters[connectionId].layout = 'setFullscreenVideo'
-					this.states.presenters[connectionId].fullscreenSource = source
+				{
+					let source = message.data.sourceName
+					if (connection.parameters?.multiView?.mainSource === source) {
+						this.states.presenters[connectionId].layout = 'setFullscreenMain'
+					} else {
+						this.states.presenters[connectionId].layout = 'setFullscreenVideo'
+						this.states.presenters[connectionId].fullscreenSource = source
+					}
+					this.checkFeedbacks('presenterLayout', 'presenterSource')
 				}
-				this.checkFeedbacks('presenterLayout', 'presenterSource')
-				this.checkFeedbacks('presenterLayout')
 				break
 			case 'setMixed':
-				let mixedSource = message.data.sourceName
-				this.states.presenters[connectionId].layout = 'setMixed'
-				this.states.presenters[connectionId].mixedSource = mixedSource
-				this.checkFeedbacks('presenterLayout', 'presenterSource')
+				{
+					let mixedSource = message.data.sourceName
+					this.states.presenters[connectionId].layout = 'setMixed'
+					this.states.presenters[connectionId].mixedSource = mixedSource
+					this.checkFeedbacks('presenterLayout', 'presenterSource')
+				}
 				break
 			case 'setAudioReceiver':
 				this.states.presenters[connectionId].audioDevice = message.data.sourceName
 					? message.data.sourceName
 					: message.data.deviceName
 				this.checkFeedbacks('presenterAudioDevice')
+				break
+			case 'fadeIn':
+			case 'fadeOut':
+				this.states.presenters[connectionId].overlay = message.msg
+				this.states.presenters[connectionId].duration = message.data?.duration ?? 1
+				this.checkFeedbacks('presenterOverlayActive')
 				break
 			case 'ptz':
 				if (!this.states.ptzDevice.sourceId) {

@@ -1,17 +1,23 @@
 export function getActions() {
-	let startStopOptions = [
+	const startStopOptions = [
 		{ id: 'TOGGLE', label: 'Toggle' },
 		{ id: 'START', label: 'Start' },
 		{ id: 'STOP', label: 'Stop' },
 	]
 
-	let presenterLayoutOptions = [
+	const overlayOptions = [
+		{ id: 'toggle', label: 'Toggle' },
+		{ id: 'fadeIn', label: 'Overlay On' },
+		{ id: 'fadeOut', label: 'Overlay Off' },
+	]
+
+	const presenterLayoutOptions = [
 		{ id: 'setFullscreenMain', label: 'Main Source Fullscreen' },
 		{ id: 'setFullscreenVideo', label: 'Video Source Fullscreen' },
 		{ id: 'setMixed', label: 'Mix Sources' },
 	]
 
-	let ptzOptions = [
+	const ptzOptions = [
 		{ id: 'left', label: 'Left' },
 		{ id: 'right', label: 'Right' },
 		{ id: 'up', label: 'Up' },
@@ -194,10 +200,25 @@ export function getActions() {
 				},
 				{
 					type: 'checkbox',
+					label: 'Use Fade',
+					id: 'fade',
+					default: false,
+				},
+				{
+					type: 'number',
+					label: 'Fade Duration (seconds)',
+					id: 'duration',
+					default: 1,
+					min: 0,
+					max: 2,
+					isVisibleExpression: '$(options:fade) === true',
+				},
+				{
+					type: 'checkbox',
 					label: 'Use Custom Source',
 					id: 'custom',
 					default: false,
-					isVisible: (options) => options.layout === 'setFullscreenVideo' || options.layout === 'setMixed',
+					isVisibleExpression: `$(options:layout) === 'setFullscreenVideo' || $(options:layout) === 'setMixed'`,
 				},
 				{
 					type: 'dropdown',
@@ -205,8 +226,7 @@ export function getActions() {
 					id: 'source',
 					choices: this.choices.presentersSources,
 					default: this.choices.presentersSources?.[0]?.id,
-					isVisible: (options) =>
-						(options.layout === 'setFullscreenVideo' || options.layout === 'setMixed') && options.custom === true,
+					isVisibleExpression: `($(options:layout) === 'setFullscreenVideo' || $(options:layout) === 'setMixed') && $(options:custom) === true`,
 				},
 			],
 			callback: (action) => {
@@ -228,6 +248,7 @@ export function getActions() {
 					sourceId: connection.sourceId,
 					connectionId: connection.id,
 					sourceName: sourceName,
+					duration: action.options.fade ? action.options.duration : 0,
 				}
 
 				this.sendPresenterCommand(layout, body)
@@ -281,7 +302,8 @@ export function getActions() {
 					id: 'connection',
 					choices: this.choices.presenters,
 					default: this.choices.presenters?.[0]?.id,
-					isVisible: (options) => !options.local,
+
+					isVisibleExpression: '!$(options:local)',
 				},
 				{
 					type: 'dropdown',
@@ -289,7 +311,8 @@ export function getActions() {
 					id: 'device',
 					choices: this.choices.ndiSources,
 					default: this.choices.ndiSources?.[0]?.id,
-					isVisible: (options) => !options.local,
+
+					isVisibleExpression: '!$(options:local)',
 				},
 				{
 					type: 'checkbox',
@@ -314,7 +337,7 @@ export function getActions() {
 					max: 1,
 					step: 0.1,
 					range: true,
-					isVisible: (options) => options.ptz !== 'stop',
+					isVisibleExpression: '$(options:ptz) !== "stop"',
 				},
 			],
 			callback: (action) => {
@@ -398,6 +421,55 @@ export function getActions() {
 				}
 				this.checkFeedbacks('presenterPTZDevice')
 				this.setVariableValues({ presenter_ptz_device: action.options.device })
+			},
+		},
+		presenterOverlay: {
+			name: 'Set Presenter Overlay',
+			options: [
+				{
+					type: 'dropdown',
+					label: 'Presenter Connection',
+					id: 'connection',
+					choices: this.choices.presenters,
+					default: this.choices.presenters?.[0]?.id,
+				},
+				{
+					type: 'dropdown',
+					label: 'Overlay Action',
+					id: 'overlay',
+					choices: overlayOptions,
+					default: 'toggle',
+				},
+				{
+					type: 'number',
+					label: 'Overlay Fade Duration',
+					id: 'duration',
+					min: 0,
+					max: 2,
+					default: 1,
+				},
+			],
+			callback: (action) => {
+				let connection = this.states.connections.find(({ id }) => id === action.options.connection)
+				let presenter = this.states.presenters[action.options.connection]
+				if (!connection) {
+					this.log('error', `Connection with ID ${action.options.connection} not found`)
+					return
+				}
+				let command = 'fadeOut'
+				if (action.options.overlay === 'toggle') {
+					command = presenter.overlay === 'fadeIn' ? 'fadeOut' : 'fadeIn'
+				} else {
+					command = action.options.overlay
+				}
+
+				let body = {
+					sourceId: connection.sourceId,
+					connectionId: connection.id,
+					duration: action.options.duration ?? 1,
+				}
+
+				this.sendPresenterCommand(command, body)
 			},
 		},
 	}

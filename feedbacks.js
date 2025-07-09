@@ -204,6 +204,27 @@ export function getFeedbacks() {
 		},
 	}
 
+	feedbacks['presenterOverlayActive'] = {
+		type: 'boolean',
+		name: 'Presenter Overlay Active',
+		description: 'Change style if a Presenter overlay is active',
+		defaultStyle: {
+			bgcolor: ColorGreen,
+		},
+		options: [
+			{
+				type: 'dropdown',
+				label: 'Presenter Connection',
+				id: 'connection',
+				choices: this.choices.presenters,
+				default: this.choices.presenters?.[0]?.id,
+			},
+		],
+		callback: (feedback) => {
+			return this.states.presenters[feedback.options.connection]?.overlay === 'fadeIn'
+		},
+	}
+
 	feedbacks['presenterPTZDevice'] = {
 		type: 'boolean',
 		name: 'Presenter PTZ Device',

@@ -1,6 +1,6 @@
 {
 	"name": "birddog-connect",
-	"version": "1.0.4",
+	"version": "1.1.0",
 	"main": "main.js",
 	"scripts": {
 		"format": "prettier -w .",
@@ -16,16 +16,16 @@
 	},
 	"dependencies": {
 		"@companion-module/base": "~1.12.1",
-		"eslint": "^9.29.0",
+		"eslint": "^9.30.1",
 		"socketcluster-client": "^19.2.7"
 	},
 	"devDependencies": {
 		"@companion-module/tools": "^2.3.0",
-		"prettier": "^3.6.1"
+		"prettier": "^3.6.2"
 	},
 	"engines": {
 		"node": "^22.12"
 	},
-	"packageManager": "yarn@4.5.3",
+	"packageManager": "yarn@4.9.2",
 	"prettier": "@companion-module/tools/.prettierrc.json"
 }

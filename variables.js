@@ -10,7 +10,6 @@ export function getVariables() {
 
 	if (this.states.connections) {
 		this.states.connections.forEach((connection) => {
-			let id = connection.id
 			let name = connection.id
 			name = this.getConnectionDisplayName(connection)
 			let cleanName = name.replace(/[\W]/gi, '_')
