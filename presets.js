@@ -533,6 +533,78 @@ export function getPresets() {
 			],
 			feedbacks: [],
 		}
+		presets[`presenter_ptz_in`] = {
+			type: 'button',
+			category: 'Presenter PTZ Control',
+			name: 'PTZ - In',
+			options: {},
+			style: {
+				text: 'ZOOM\\nIN',
+				size: 'auto',
+				color: ColorWhite,
+				bgcolor: ColorBlack,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'presenterPtz',
+							options: {
+								local: true,
+								ptz: 'in',
+								speed: 0.5,
+							},
+						},
+					],
+					up: [
+						{
+							actionId: 'presenterPtz',
+							options: {
+								local: true,
+								ptz: 'stop',
+							},
+						},
+					],
+				},
+			],
+			feedbacks: [],
+		}
+		presets[`presenter_ptz_out`] = {
+			type: 'button',
+			category: 'Presenter PTZ Control',
+			name: 'PTZ - Out',
+			options: {},
+			style: {
+				text: 'ZOOM\\nOUT',
+				size: 'auto',
+				color: ColorWhite,
+				bgcolor: ColorBlack,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'presenterPtz',
+							options: {
+								local: true,
+								ptz: 'out',
+								speed: 0.5,
+							},
+						},
+					],
+					up: [
+						{
+							actionId: 'presenterPtz',
+							options: {
+								local: true,
+								ptz: 'stop',
+							},
+						},
+					],
+				},
+			],
+			feedbacks: [],
+		}
 
 		this.choices.presenters.forEach((presenter) => {
 			let id = presenter.id
