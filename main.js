@@ -22,7 +22,18 @@ class BirdDogCloudInstance extends InstanceBase {
 		this.states = {} //Channel data from Cloud
 		this.states.presenters = {}
 		this.states.ptzDevice = {}
-		this.choices = {} //Dropdown options for Companion
+		this.choices = {
+			connections: [],
+			presenters: [],
+			presentersSources: [],
+			endpoints: [],
+			audioDevices: [],
+			ndiSources: [],
+			recorders: [],
+			recordings: [],
+			encoders: [],
+			encoderSessions: [],
+		} //Dropdown options for Companion
 
 		//Auth setup for Socketcluster
 		this.websocketAuthEngine = {
@@ -505,10 +516,6 @@ class BirdDogCloudInstance extends InstanceBase {
 
 	//Channel Specific Functions
 	setupConnections() {
-		this.choices.connections = []
-		this.choices.presenters = []
-		this.choices.presentersSources = []
-
 		this.states.connections.forEach((connection) => {
 			let id = connection.id
 			let name = connection.id
@@ -579,10 +586,6 @@ class BirdDogCloudInstance extends InstanceBase {
 	}
 
 	setupEndpoints() {
-		this.choices.endpoints = []
-		this.choices.audioDevices = []
-		this.choices.ndiSources = []
-
 		this.states.endpoints.forEach((endpoint) => {
 			let id = endpoint.id
 			let name = endpoint.name
@@ -634,7 +637,6 @@ class BirdDogCloudInstance extends InstanceBase {
 	}
 
 	setupRecorders() {
-		this.choices.recorders = []
 		this.states.recorders.forEach((recorder) => {
 			let id = recorder.id
 			let name = recorder.name
@@ -646,7 +648,6 @@ class BirdDogCloudInstance extends InstanceBase {
 	}
 
 	setupRecordings() {
-		this.choices.recordings = []
 		this.states.recordings.forEach((recording) => {
 			let id = recording.id
 			let name = recording.parameters.input
@@ -679,7 +680,6 @@ class BirdDogCloudInstance extends InstanceBase {
 	}
 
 	setupEncoders() {
-		this.choices.encoders = []
 		this.states.encoders.forEach((encoder) => {
 			let id = encoder.id
 			let name = encoder.name
@@ -691,7 +691,6 @@ class BirdDogCloudInstance extends InstanceBase {
 	}
 
 	setupEncoderSessions() {
-		this.choices.encoderSessions = []
 		this.states['encoder-sessions'].forEach((session) => {
 			let id = session.id
 			let name = session.id
