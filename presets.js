@@ -381,6 +381,11 @@ export function getPresets() {
 	}
 
 	if (this.choices.presenters) {
+		presets[`presenter_ptz_basic`] = {
+			category: 'Presenter PTZ Control',
+			name: `PTZ Controls`,
+			type: 'text',
+		}
 		presets[`presenter_ptz_up`] = {
 			type: 'button',
 			category: 'Presenter PTZ Control',
@@ -605,7 +610,79 @@ export function getPresets() {
 			],
 			feedbacks: [],
 		}
+		presets[`presenter_ptz_preset_recall`] = {
+			category: 'Presenter PTZ Control',
+			name: `PTZ Recall Presets`,
+			type: 'text',
+		}
 
+		for (let i = 1; i <= 9; i++) {
+			presets[`presenter_ptz_preset_${i}`] = {
+				type: 'button',
+				category: 'Presenter PTZ Control',
+				name: `Presenter Preset Recall ${i}`,
+				options: {},
+				style: {
+					text: `RECALL\\n${i}`,
+					size: 'auto',
+					color: ColorWhite,
+					bgcolor: ColorBlack,
+				},
+				steps: [
+					{
+						down: [
+							{
+								actionId: 'presenterPtzPreset',
+								options: {
+									local: true,
+									ptz: 'loadPreset',
+									preset: i,
+									speed: 1,
+								},
+							},
+						],
+						up: [],
+					},
+				],
+				feedbacks: [],
+			}
+		}
+
+		presets[`presenter_ptz_preset_store`] = {
+			category: 'Presenter PTZ Control',
+			name: `PTZ Store Presets`,
+			type: 'text',
+		}
+		for (let i = 1; i <= 9; i++) {
+			presets[`presenter_ptz_preset_${i}_store`] = {
+				type: 'button',
+				category: 'Presenter PTZ Control',
+				name: `Presenter Preset Store ${i}`,
+				options: {},
+				style: {
+					text: `STORE\\n${i}`,
+					size: 'auto',
+					color: ColorWhite,
+					bgcolor: ColorBlack,
+				},
+				steps: [
+					{
+						down: [
+							{
+								actionId: 'presenterPtzPreset',
+								options: {
+									local: true,
+									ptz: 'storePreset',
+									preset: i,
+								},
+							},
+						],
+						up: [],
+					},
+				],
+				feedbacks: [],
+			}
+		}
 		this.choices.presenters.forEach((presenter) => {
 			let id = presenter.id
 			let name = presenter.label
