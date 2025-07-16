@@ -813,8 +813,8 @@ class BirdDogCloudInstance extends InstanceBase {
 				}
 				break
 			default:
-				//console.log(`Unknown channel message type: ${type}`)
-				//console.log(message)
+				console.log(`Unknown channel message type: ${type}`)
+				console.log(message)
 				break
 		}
 	}
