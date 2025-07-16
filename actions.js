@@ -226,7 +226,7 @@ export function getActions() {
 					id: 'source',
 					choices: this.choices.presentersSources,
 					default: this.choices.presentersSources?.[0]?.id,
-					isVisibleExpression: `($(options:layout) === 'setFullscreenVideo' || $(options:layout) === 'setMixed') && $(options:custom) === true`,
+					isVisibleExpression: `$(options:custom) === true`,
 				},
 			],
 			callback: (action) => {
@@ -297,6 +297,13 @@ export function getActions() {
 			name: 'Presenter - PTZ Control',
 			options: [
 				{
+					type: 'checkbox',
+					label: 'Use Device Selected via Companion',
+					id: 'local',
+					default: false,
+					tooltip: 'Select the device using the "Presenter - Select PTZ Device" action',
+				},
+				{
 					type: 'dropdown',
 					label: 'Presenter Connection',
 					id: 'connection',
@@ -313,13 +320,6 @@ export function getActions() {
 					default: this.choices.ndiSources?.[0]?.id,
 
 					isVisibleExpression: '!$(options:local)',
-				},
-				{
-					type: 'checkbox',
-					label: 'Use Device Selected via Companion',
-					id: 'local',
-					default: false,
-					tooltip: 'Select the device using the "Presenter - Select PTZ Device" action',
 				},
 				{
 					type: 'dropdown',
