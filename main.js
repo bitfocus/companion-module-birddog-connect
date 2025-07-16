@@ -22,6 +22,7 @@ class BirdDogCloudInstance extends InstanceBase {
 		this.states = {} //Channel data from Cloud
 		this.states.presenters = {}
 		this.states.ptzDevice = {}
+		this.states.presets = {} //Store the last loaded preset for each source
 		this.choices = {
 			connections: [],
 			presenters: [],
@@ -812,9 +813,13 @@ class BirdDogCloudInstance extends InstanceBase {
 					}
 				}
 				break
+			case 'loadPreset':
+				this.states.presets[`${message.data.sourceName}`] = message.data.slot
+				this.checkFeedbacks('presetActive')
+				break
 			default:
-				console.log(`Unknown channel message type: ${type}`)
-				console.log(message)
+				/* console.log(`Unknown channel message type: ${type}`)
+				console.log(message) */
 				break
 		}
 	}

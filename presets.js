@@ -644,7 +644,18 @@ export function getPresets() {
 						up: [],
 					},
 				],
-				feedbacks: [],
+				feedbacks: [
+					{
+						feedbackId: 'presetActive',
+						options: {
+							local: true,
+							preset: i,
+						},
+						style: {
+							bgcolor: ColorGreen,
+						},
+					},
+				],
 			}
 		}
 
