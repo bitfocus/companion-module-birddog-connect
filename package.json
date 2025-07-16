@@ -16,7 +16,7 @@
 	},
 	"dependencies": {
 		"@companion-module/base": "~1.12.1",
-		"eslint": "^9.30.1",
+		"eslint": "^9.31.0",
 		"socketcluster-client": "^19.2.7"
 	},
 	"devDependencies": {
