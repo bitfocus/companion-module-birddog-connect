@@ -309,5 +309,44 @@ export function getFeedbacks() {
 		},
 	}
 
+	feedbacks['presetActive'] = {
+		type: 'boolean',
+		name: 'PTZ Preset Active',
+		description: 'Change style if a PTZ preset is active',
+		defaultStyle: {
+			bgcolor: ColorGreen,
+		},
+		options: [
+			{
+				type: 'checkbox',
+				label: 'Use Device Selected via Companion',
+				id: 'local',
+				default: true,
+				tooltip: 'Select the device using the "Presenter - Select PTZ Device" action',
+			},
+			{
+				type: 'dropdown',
+				label: 'Device',
+				id: 'device',
+				choices: this.choices.ndiSources,
+				default: this.choices.ndiSources?.[0]?.id,
+				isVisibleExpression: '!$(options:local)',
+			},
+			{
+				type: 'number',
+				label: 'Preset Number',
+				id: 'preset',
+				default: 1,
+				min: 1,
+				max: 9,
+				step: 1,
+			},
+		],
+		callback: (feedback) => {
+			let source = feedback.options.local ? this.states.ptzDevice.sourceName : feedback.options.device
+			return this.states.presets[`${source}`] === feedback.options.preset - 1
+		},
+	}
+
 	return feedbacks
 }

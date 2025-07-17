@@ -27,6 +27,11 @@ export function getActions() {
 		{ id: 'stop', label: 'Stop' },
 	]
 
+	const ptzPresetOptions = [
+		{ id: 'loadPreset', label: 'Recall Preset' },
+		{ id: 'storePreset', label: 'Store Preset' },
+	]
+
 	return {
 		connectionControl: {
 			name: 'Start/Stop Connection',
@@ -226,7 +231,7 @@ export function getActions() {
 					id: 'source',
 					choices: this.choices.presentersSources,
 					default: this.choices.presentersSources?.[0]?.id,
-					isVisibleExpression: `($(options:layout) === 'setFullscreenVideo' || $(options:layout) === 'setMixed') && $(options:custom) === true`,
+					isVisibleExpression: `$(options:custom) === true`,
 				},
 			],
 			callback: (action) => {
@@ -297,6 +302,13 @@ export function getActions() {
 			name: 'Presenter - PTZ Control',
 			options: [
 				{
+					type: 'checkbox',
+					label: 'Use Device Selected via Companion',
+					id: 'local',
+					default: false,
+					tooltip: 'Select the device using the "Presenter - Select PTZ Device" action',
+				},
+				{
 					type: 'dropdown',
 					label: 'Presenter Connection',
 					id: 'connection',
@@ -313,13 +325,6 @@ export function getActions() {
 					default: this.choices.ndiSources?.[0]?.id,
 
 					isVisibleExpression: '!$(options:local)',
-				},
-				{
-					type: 'checkbox',
-					label: 'Use Device Selected via Companion',
-					id: 'local',
-					default: false,
-					tooltip: 'Select the device using the "Presenter - Select PTZ Device" action',
 				},
 				{
 					type: 'dropdown',
@@ -370,6 +375,10 @@ export function getActions() {
 				}
 
 				if (action.options.local) {
+					if (!this.states.ptzDevice?.sourceId) {
+						this.log('error', 'No PTZ device selected. Please use the "Presenter - Select PTZ Device" action first.')
+						return
+					}
 					body = {
 						sourceId: this.states.ptzDevice.sourceId,
 						connectionId: this.states.ptzDevice.connectionId,
@@ -391,6 +400,95 @@ export function getActions() {
 				}
 
 				this.sendPresenterCommand('ptz', body)
+			},
+		},
+		presenterPtzPreset: {
+			name: 'Presenter - PTZ Presets',
+			options: [
+				{
+					type: 'checkbox',
+					label: 'Use Device Selected via Companion',
+					id: 'local',
+					default: false,
+					tooltip: 'Select the device using the "Presenter - Select PTZ Device" action',
+				},
+				{
+					type: 'dropdown',
+					label: 'Presenter Connection',
+					id: 'connection',
+					choices: this.choices.presenters,
+					default: this.choices.presenters?.[0]?.id,
+
+					isVisibleExpression: '!$(options:local)',
+				},
+				{
+					type: 'dropdown',
+					label: 'Device',
+					id: 'device',
+					choices: this.choices.ndiSources,
+					default: this.choices.ndiSources?.[0]?.id,
+
+					isVisibleExpression: '!$(options:local)',
+				},
+				{
+					type: 'dropdown',
+					label: 'Action',
+					id: 'ptz',
+					choices: ptzPresetOptions,
+					default: 'loadPreset',
+				},
+				{
+					type: 'number',
+					label: 'Preset Number',
+					id: 'preset',
+					default: 1,
+					min: 1,
+					max: 9,
+					step: 1,
+				},
+				{
+					type: 'number',
+					label: 'Preset Recall Speed',
+					id: 'speed',
+					default: 1,
+					min: 0,
+					max: 1,
+					step: 0.1,
+					range: true,
+					isVisibleExpression: '$(options:ptz) !== "storePreset"',
+				},
+			],
+			callback: (action) => {
+				let preset = action.options.preset - 1
+				let speed = action.options.speed
+				let body = {}
+
+				if (action.options.local) {
+					if (!this.states.ptzDevice?.sourceId) {
+						this.log('error', 'No PTZ device selected. Please use the "Presenter - Select PTZ Device" action first.')
+						return
+					}
+					body = {
+						sourceId: this.states.ptzDevice.sourceId,
+						connectionId: this.states.ptzDevice.connectionId,
+						sourceName: this.states.ptzDevice.sourceName,
+					}
+				} else {
+					let connection = this.states.connections.find(({ id }) => id === action.options.connection)
+					body = {
+						sourceId: connection.sourceId,
+						connectionId: connection.id,
+						sourceName: action.options.device,
+					}
+				}
+				if (action.options.ptz === 'storePreset') {
+					body.slot = preset
+				} else {
+					body.slot = preset
+					body.speed = speed
+				}
+
+				this.sendPresenterCommand(`${action.options.ptz}`, body)
 			},
 		},
 		presenterPtzDevice: {
