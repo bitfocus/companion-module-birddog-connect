@@ -23,6 +23,7 @@ class BirdDogCloudInstance extends InstanceBase {
 		this.states.presenters = {}
 		this.states.ptzDevice = {}
 		this.states.presets = {} //Store the last loaded preset for each source
+		this.states.thumbnails = {} //Store the last generated thumbnail for each source
 		this.choices = {
 			connections: [],
 			presenters: [],
@@ -528,7 +529,6 @@ class BirdDogCloudInstance extends InstanceBase {
 					if (presenterIndex === -1) {
 						this.choices.presenters.push({ id: id, label: name })
 					}
-
 					let firstSource = connection?.parameters?.multiView?.firstVideoSource
 					let videoSources = connection?.parameters?.videoSources
 
@@ -766,6 +766,15 @@ class BirdDogCloudInstance extends InstanceBase {
 					}
 				}
 			})()
+			;(async () => {
+				let subState = this.socket.isSubscribed(`/thumbs/${endpointId}/${connectionId}/0`)
+				if (subState === false) {
+					let channel = this.socket.subscribe(`/thumbs/${endpointId}/${connectionId}/0`, { batch: true })
+					for await (let message of channel) {
+						this.generateThumbnails(connectionId, endpointId, message)
+					}
+				}
+			})()
 		}
 	}
 
@@ -841,6 +850,22 @@ class BirdDogCloudInstance extends InstanceBase {
 					return connection.id
 				}
 			}
+		}
+	}
+
+	async generateThumbnails(connectionId, endpointId, data) {
+		try {
+			// Validate that the data is a Base64-encoded string
+			if (!/^data:image\/jpg;base64,[A-Za-z0-9+/=]+$/.test(data)) {
+				this.log('debug', 'Invalid Base64 thumbnail data received')
+				return
+			}
+			const base64String = data.replace(/^data:image\/jpg;base64,/, '')
+			this.states.thumbnails[connectionId] = base64String
+
+			this.checkFeedbacks('presenterThumbnail')
+		} catch (error) {
+			this.log('debug', `Failed to generate thumbnails for connection ${connectionId}: ${error.message}`)
 		}
 	}
 }

@@ -1,4 +1,5 @@
 import { combineRgb } from '@companion-module/base'
+import { connectLogo } from './utils.js'
 
 export function getFeedbacks() {
 	const feedbacks = {}
@@ -345,6 +346,30 @@ export function getFeedbacks() {
 		callback: (feedback) => {
 			let source = feedback.options.local ? this.states.ptzDevice.sourceName : feedback.options.device
 			return this.states.presets[`${source}`] === feedback.options.preset - 1
+		},
+	}
+
+	feedbacks['presenterThumbnail'] = {
+		type: 'advanced',
+		name: 'Presenter Thumbnail',
+		description: 'Show the latest thumbnail preview for the selected Presenter (updates approximately every second)',
+		options: [
+			{
+				type: 'dropdown',
+				label: 'Presenter Connection',
+				id: 'connection',
+				choices: this.choices.presenters,
+				default: this.choices.presenters?.[0]?.id,
+			},
+		],
+		callback: (feedback) => {
+			let presenterState = this.states.connections?.some(
+				({ id, state }) => id === feedback.options.connection && state === 'CONNECTED',
+			)
+
+			return presenterState
+				? { png64: this.states.thumbnails[`${feedback.options.connection}`] ?? connectLogo }
+				: { png64: connectLogo }
 		},
 	}
 
