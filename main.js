@@ -530,6 +530,7 @@ class BirdDogCloudInstance extends InstanceBase {
 						this.choices.presenters.push({ id: id, label: name })
 					}
 					let firstSource = connection?.parameters?.multiView?.firstVideoSource
+					let mainSource = connection?.parameters?.multiView?.mainSource
 					let videoSources = connection?.parameters?.videoSources
 
 					if (firstSource) {
@@ -539,6 +540,15 @@ class BirdDogCloudInstance extends InstanceBase {
 						let index = this.choices.presentersSources.findIndex((el) => el.id === firstSource)
 						if (index === -1) {
 							this.choices.presentersSources.push({ id: firstSource, label: firstSource })
+						}
+					}
+					if (mainSource) {
+						if (typeof mainSource === 'object') {
+							mainSource = mainSource.displayName ? mainSource.displayName : ''
+						}
+						let index = this.choices.presentersSources.findIndex((el) => el.id === mainSource)
+						if (index === -1) {
+							this.choices.presentersSources.push({ id: mainSource, label: mainSource })
 						}
 					}
 					if (videoSources?.length > 0) {
