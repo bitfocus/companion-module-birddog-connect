@@ -312,7 +312,7 @@ export function getFeedbacks() {
 
 	feedbacks['presetActive'] = {
 		type: 'boolean',
-		name: 'PTZ Preset Active',
+		name: 'Presenter - PTZ Preset Active',
 		description: 'Change style if a PTZ preset is active',
 		defaultStyle: {
 			bgcolor: ColorGreen,
@@ -351,7 +351,7 @@ export function getFeedbacks() {
 
 	feedbacks['presenterThumbnail'] = {
 		type: 'advanced',
-		name: 'Presenter Thumbnail',
+		name: 'Presenter - Thumbnail',
 		description: 'Show the latest thumbnail preview for the selected Presenter (updates approximately every second)',
 		options: [
 			{
