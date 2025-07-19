@@ -12,7 +12,7 @@ See [HELP.md](./companion/HELP.md) and [LICENSE](./LICENSE)
   - Feedback: Presenter Thumbnails
 - Fixes
   - Main Source not showing up as option in Custom Source dropdown
-  - Custom Source dropdown is properly hidden by default on presets
+  - Custom Source dropdown is properly hidden by default when using presets
 
 ### v1.1.0
 

@@ -19,11 +19,12 @@ class BirdDogCloudInstance extends InstanceBase {
 		//Initialize Objects for Data Storage
 		this.cloud = {} //Basic Cloud Info (Company, Refresh Token)
 		this.auth = {} //Socketcluster-specific auth
-		this.states = {} //Channel data from Cloud
-		this.states.presenters = {}
-		this.states.ptzDevice = {}
-		this.states.presets = {} //Store the last loaded preset for each source
-		this.states.thumbnails = {} //Store the last generated thumbnail for each source
+		this.states = {
+			presenters: {},
+			ptzDevice: {},
+			presets: {}, // Store the last loaded preset for each source
+			thumbnails: {}, // Store the last generated thumbnail for each source
+		} // Channel data from Cloud
 		this.choices = {
 			connections: [],
 			presenters: [],
