@@ -104,7 +104,7 @@ export function getFeedbacks() {
 
 	feedbacks['presenterLayout'] = {
 		type: 'boolean',
-		name: 'Presenter Layout',
+		name: 'Presenter - Current Layout',
 		description: 'Change style if a Presenter is set to the selected layout',
 		defaultStyle: {
 			bgcolor: ColorGreen,
@@ -132,7 +132,7 @@ export function getFeedbacks() {
 
 	feedbacks['presenterSource'] = {
 		type: 'boolean',
-		name: 'Presenter Source',
+		name: 'Presenter - Source',
 		description: 'Change style if a Presenter is set to the selected source',
 		defaultStyle: {
 			bgcolor: ColorGreen,
@@ -179,7 +179,7 @@ export function getFeedbacks() {
 
 	feedbacks['presenterAudioDevice'] = {
 		type: 'boolean',
-		name: 'Presenter Audio Device',
+		name: 'Presenter - Audio Device',
 		description: 'Change style if a Presenter is set to the selected audio device',
 		defaultStyle: {
 			bgcolor: ColorGreen,
@@ -207,7 +207,7 @@ export function getFeedbacks() {
 
 	feedbacks['presenterOverlayActive'] = {
 		type: 'boolean',
-		name: 'Presenter Overlay Active',
+		name: 'Presenter - Overlay Active',
 		description: 'Change style if a Presenter overlay is active',
 		defaultStyle: {
 			bgcolor: ColorGreen,
@@ -228,7 +228,7 @@ export function getFeedbacks() {
 
 	feedbacks['presenterPTZDevice'] = {
 		type: 'boolean',
-		name: 'Presenter PTZ Device',
+		name: 'Presenter - PTZ Device',
 		description: 'Change style if a Presenter is set to the selected PTZ device in Companion',
 		defaultStyle: {
 			bgcolor: ColorGreen,

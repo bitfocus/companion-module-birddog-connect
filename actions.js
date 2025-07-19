@@ -34,7 +34,7 @@ export function getActions() {
 
 	return {
 		connectionControl: {
-			name: 'Start/Stop Connection',
+			name: 'Start / Stop Connection',
 			options: [
 				{
 					type: 'dropdown',
@@ -67,7 +67,7 @@ export function getActions() {
 			},
 		},
 		recordingControl: {
-			name: 'Start/Stop Recordings',
+			name: 'Start / Stop Selected Recordings',
 			options: [
 				{
 					type: 'multidropdown',
@@ -108,7 +108,7 @@ export function getActions() {
 			},
 		},
 		recorderControl: {
-			name: 'Start/Stop All Recordings on Recorder',
+			name: 'Start / Stop All Recordings on Recorder',
 			options: [
 				{
 					type: 'dropdown',
@@ -159,11 +159,11 @@ export function getActions() {
 			},
 		},
 		encoderSessionControl: {
-			name: 'Start/Stop Encode/Decode',
+			name: 'Start / Stop Encode / Decode Session',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'Encode/Decode',
+					label: 'Encode / Decode',
 					id: 'encoderSession',
 					choices: this.choices.encoderSessions,
 					default: this.choices.encoderSessions?.[0]?.id,
@@ -187,7 +187,7 @@ export function getActions() {
 			},
 		},
 		presenterLayout: {
-			name: 'Set Presenter Layout',
+			name: 'Presenter - Set Layout',
 			options: [
 				{
 					type: 'dropdown',
@@ -260,7 +260,7 @@ export function getActions() {
 			},
 		},
 		presenterAudioDevice: {
-			name: 'Set Presenter Audio Device',
+			name: 'Presenter - Set Audio Device',
 			options: [
 				{
 					type: 'dropdown',
@@ -299,7 +299,7 @@ export function getActions() {
 			},
 		},
 		presenterPtz: {
-			name: 'Presenter - PTZ Control',
+			name: 'Presenter - PTZ Controls',
 			options: [
 				{
 					type: 'checkbox',
@@ -403,7 +403,7 @@ export function getActions() {
 			},
 		},
 		presenterPtzPreset: {
-			name: 'Presenter - PTZ Presets',
+			name: 'Presenter - Store / Recall PTZ Presets',
 			options: [
 				{
 					type: 'checkbox',
@@ -522,7 +522,7 @@ export function getActions() {
 			},
 		},
 		presenterOverlay: {
-			name: 'Set Presenter Overlay',
+			name: 'Presenter - Set Overlay',
 			options: [
 				{
 					type: 'dropdown',
