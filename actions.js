@@ -91,7 +91,10 @@ export function getActions() {
 				let recordings
 				let state
 
-				if (action.options.recordings.length > 1) {
+				if (!action.options.recordings || action.options.recordings.length === 0) {
+					this.log('warn', 'No recordings selected')
+					return
+				} else if (action.options.recordings.length > 1) {
 					field = 'ids'
 					recordings = action.options.recordings
 					state = action.options.command === 'START' ? 'START_MULTIPLE' : 'STOP_MULTIPLE'
@@ -131,6 +134,12 @@ export function getActions() {
 				let field
 				let recordings = []
 				let state
+
+				if (!action.options.recorder) {
+					this.log('warn', 'Unable to stop recordings, no recorder selected')
+					return
+				}
+
 				let recorderSources = this.states.recordings.filter(
 					(recording) => recording.recorderId === action.options.recorder,
 				)
@@ -180,6 +189,10 @@ export function getActions() {
 				},
 			],
 			callback: (action) => {
+				if (!action.options.encoderSession) {
+					this.log('warn', 'Unable to stop encode/decode session, no encoder session selected')
+					return
+				}
 				this.sendCommand(`encoder-session/action`, 'POST', {
 					id: action.options.encoderSession,
 					action: action.options.command,
