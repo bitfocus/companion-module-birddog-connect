@@ -190,7 +190,7 @@ export function getActions() {
 			],
 			callback: (action) => {
 				if (!action.options.encoderSession) {
-					this.log('warn', 'Unable to stop encode/decode session, no encoder session selected')
+					this.log('warn', 'Unable to control encode/decode session, no encoder session selected')
 					return
 				}
 				this.sendCommand(`encoder-session/action`, 'POST', {
