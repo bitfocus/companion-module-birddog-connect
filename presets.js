@@ -1091,6 +1091,42 @@ export function getPresets() {
 					],
 				}
 			})
+			presets[`presenter_${name}_header`] = {
+				category: 'Presenter Thumbnails',
+				name: `Thumbnail - ${name}`,
+				type: 'text',
+			}
+			presets[`presenter_${name}_thumbnail`] = {
+				type: 'button',
+				category: 'Presenter Thumbnails',
+				name: `Presenter ${name} Thumbnail`,
+				options: {},
+				style: {
+					text: `${name}`,
+					size: '14',
+					alignment: 'center:bottom',
+					pngalignment: 'center:top',
+					color: ColorWhite,
+					bgcolor: ColorBlack,
+				},
+				steps: [
+					{
+						down: [],
+						up: [],
+					},
+				],
+				feedbacks: [
+					{
+						feedbackId: 'presenterThumbnail',
+						options: {
+							connection: `${id}`,
+						},
+						style: {
+							bgcolor: ColorGreen,
+						},
+					},
+				],
+			}
 		})
 	}
 

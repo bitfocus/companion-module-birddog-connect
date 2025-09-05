@@ -638,6 +638,7 @@ class BirdDogCloudInstance extends InstanceBase {
 		this.initFeedbacks()
 		this.initPresets()
 		this.initVariables()
+		this.subscribeFeedbacks()
 		this.checkFeedbacks()
 	}
 
@@ -777,15 +778,6 @@ class BirdDogCloudInstance extends InstanceBase {
 					}
 				}
 			})()
-			;(async () => {
-				let subState = this.socket.isSubscribed(`/thumbs/${endpointId}/${connectionId}/0`)
-				if (subState === false) {
-					let channel = this.socket.subscribe(`/thumbs/${endpointId}/${connectionId}/0`, { batch: true })
-					for await (let message of channel) {
-						this.generateThumbnails(connectionId, endpointId, message)
-					}
-				}
-			})()
 		}
 	}
 
@@ -860,6 +852,34 @@ class BirdDogCloudInstance extends InstanceBase {
 				} else {
 					return connection.id
 				}
+			}
+		}
+	}
+
+	subscribePresenterThumbnail(feedback) {
+		let connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
+		if (connection && this.socket) {
+			let connectionId = feedback.options.connection
+			let endpointId = connection.sourceId
+			;(async () => {
+				let subState = this.socket.isSubscribed(`/thumbs/${endpointId}/${connectionId}/0`)
+				if (subState === false) {
+					let channel = this.socket.subscribe(`/thumbs/${endpointId}/${connectionId}/0`, { batch: true })
+					for await (let message of channel) {
+						this.generateThumbnails(connectionId, endpointId, message)
+					}
+				}
+			})()
+		}
+	}
+
+	unsubscribePresenterThumbnail(feedback) {
+		let connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
+		if (connection && this.socket) {
+			let connectionId = feedback.options.connection
+			let endpointId = connection.sourceId
+			if (this.socket.isSubscribed(`/thumbs/${endpointId}/${connectionId}/0`)) {
+				this.socket.unsubscribe(`/thumbs/${endpointId}/${connectionId}/0`)
 			}
 		}
 	}

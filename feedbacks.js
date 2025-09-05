@@ -371,6 +371,12 @@ export function getFeedbacks() {
 				? { png64: this.states.thumbnails[`${feedback.options.connection}`] ?? connectLogo }
 				: { png64: connectLogo }
 		},
+		subscribe: (feedback) => {
+			this.subscribePresenterThumbnail(feedback)
+		},
+		unsubscribe: (feedback) => {
+			this.unsubscribePresenterThumbnail(feedback)
+		},
 	}
 
 	return feedbacks
