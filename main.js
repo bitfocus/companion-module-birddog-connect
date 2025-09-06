@@ -868,7 +868,7 @@ class BirdDogCloudInstance extends InstanceBase {
 			})
 			;(async () => {
 				let subState = this.socket.isSubscribed(`/thumbs/${endpointId}/${connectionId}/0`)
-				if (subState === false) {
+				if (!subState) {
 					let channel = this.socket.subscribe(`/thumbs/${endpointId}/${connectionId}/0`, { batch: true })
 					for await (let message of channel) {
 						this.generateThumbnails(connectionId, endpointId, message)
