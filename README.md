@@ -9,7 +9,7 @@ See [HELP.md](./companion/HELP.md) and [LICENSE](./LICENSE)
 - New
   - Action: Presenter - PTZ Presets, allows both store and recall of presets
   - Feedback: Presenter - PTZ Preset Active
-  - Feedback: Presenter Thumbnails
+  - Feedback: Presenter - Thumbnails
 - Fixes
   - Main Source not showing up as option in Custom Source dropdown
   - Custom Source dropdown is properly hidden by default when using presets

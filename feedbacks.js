@@ -351,7 +351,7 @@ export function getFeedbacks() {
 
 	feedbacks['presenterThumbnail'] = {
 		type: 'advanced',
-		name: 'Presenter - Thumbnail',
+		name: 'Presenter - Thumbnails',
 		description: 'Show the latest thumbnail preview for the selected Presenter (updates approximately every second)',
 		options: [
 			{

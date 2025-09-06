@@ -1093,7 +1093,7 @@ export function getPresets() {
 			})
 			presets[`presenter_${name}_header`] = {
 				category: 'Presenter Thumbnails',
-				name: `Thumbnail - ${name}`,
+				name: `Thumbnails - ${name}`,
 				type: 'text',
 			}
 			presets[`presenter_${name}_thumbnail`] = {
