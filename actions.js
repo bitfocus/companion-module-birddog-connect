@@ -34,7 +34,7 @@ export function getActions() {
 
 	return {
 		connectionControl: {
-			name: 'Start/Stop Connection',
+			name: 'Start / Stop Connection',
 			options: [
 				{
 					type: 'dropdown',
@@ -67,7 +67,7 @@ export function getActions() {
 			},
 		},
 		recordingControl: {
-			name: 'Start/Stop Recordings',
+			name: 'Start / Stop Selected Recordings',
 			options: [
 				{
 					type: 'multidropdown',
@@ -91,7 +91,10 @@ export function getActions() {
 				let recordings
 				let state
 
-				if (action.options.recordings.length > 1) {
+				if (!action.options.recordings || action.options.recordings.length === 0) {
+					this.log('warn', 'No recordings selected')
+					return
+				} else if (action.options.recordings.length > 1) {
 					field = 'ids'
 					recordings = action.options.recordings
 					state = action.options.command === 'START' ? 'START_MULTIPLE' : 'STOP_MULTIPLE'
@@ -108,7 +111,7 @@ export function getActions() {
 			},
 		},
 		recorderControl: {
-			name: 'Start/Stop All Recordings on Recorder',
+			name: 'Start / Stop All Recordings on Recorder',
 			options: [
 				{
 					type: 'dropdown',
@@ -131,6 +134,12 @@ export function getActions() {
 				let field
 				let recordings = []
 				let state
+
+				if (!action.options.recorder) {
+					this.log('warn', 'Unable to stop recordings, no recorder selected')
+					return
+				}
+
 				let recorderSources = this.states.recordings.filter(
 					(recording) => recording.recorderId === action.options.recorder,
 				)
@@ -159,11 +168,11 @@ export function getActions() {
 			},
 		},
 		encoderSessionControl: {
-			name: 'Start/Stop Encode/Decode',
+			name: 'Start / Stop Encode / Decode Session',
 			options: [
 				{
 					type: 'dropdown',
-					label: 'Encode/Decode',
+					label: 'Encode / Decode',
 					id: 'encoderSession',
 					choices: this.choices.encoderSessions,
 					default: this.choices.encoderSessions?.[0]?.id,
@@ -180,6 +189,10 @@ export function getActions() {
 				},
 			],
 			callback: (action) => {
+				if (!action.options.encoderSession) {
+					this.log('warn', 'Unable to control encode/decode session, no encoder session selected')
+					return
+				}
 				this.sendCommand(`encoder-session/action`, 'POST', {
 					id: action.options.encoderSession,
 					action: action.options.command,
@@ -187,7 +200,7 @@ export function getActions() {
 			},
 		},
 		presenterLayout: {
-			name: 'Set Presenter Layout',
+			name: 'Presenter - Set Layout',
 			options: [
 				{
 					type: 'dropdown',
@@ -260,7 +273,7 @@ export function getActions() {
 			},
 		},
 		presenterAudioDevice: {
-			name: 'Set Presenter Audio Device',
+			name: 'Presenter - Set Audio Device',
 			options: [
 				{
 					type: 'dropdown',
@@ -299,7 +312,7 @@ export function getActions() {
 			},
 		},
 		presenterPtz: {
-			name: 'Presenter - PTZ Control',
+			name: 'Presenter - PTZ Controls',
 			options: [
 				{
 					type: 'checkbox',
@@ -403,7 +416,7 @@ export function getActions() {
 			},
 		},
 		presenterPtzPreset: {
-			name: 'Presenter - PTZ Presets',
+			name: 'Presenter - Store / Recall PTZ Presets',
 			options: [
 				{
 					type: 'checkbox',
@@ -522,7 +535,7 @@ export function getActions() {
 			},
 		},
 		presenterOverlay: {
-			name: 'Set Presenter Overlay',
+			name: 'Presenter - Set Overlay',
 			options: [
 				{
 					type: 'dropdown',

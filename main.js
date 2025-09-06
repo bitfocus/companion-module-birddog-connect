@@ -19,10 +19,12 @@ class BirdDogCloudInstance extends InstanceBase {
 		//Initialize Objects for Data Storage
 		this.cloud = {} //Basic Cloud Info (Company, Refresh Token)
 		this.auth = {} //Socketcluster-specific auth
-		this.states = {} //Channel data from Cloud
-		this.states.presenters = {}
-		this.states.ptzDevice = {}
-		this.states.presets = {} //Store the last loaded preset for each source
+		this.states = {
+			presenters: {},
+			ptzDevice: {},
+			presets: {}, // Store the last loaded preset for each source
+			thumbnails: {}, // Store the last generated thumbnail for each source
+		} // Channel data from Cloud
 		this.choices = {
 			connections: [],
 			presenters: [],
@@ -528,8 +530,8 @@ class BirdDogCloudInstance extends InstanceBase {
 					if (presenterIndex === -1) {
 						this.choices.presenters.push({ id: id, label: name })
 					}
-
 					let firstSource = connection?.parameters?.multiView?.firstVideoSource
+					let mainSource = connection?.parameters?.multiView?.mainSource
 					let videoSources = connection?.parameters?.videoSources
 
 					if (firstSource) {
@@ -539,6 +541,15 @@ class BirdDogCloudInstance extends InstanceBase {
 						let index = this.choices.presentersSources.findIndex((el) => el.id === firstSource)
 						if (index === -1) {
 							this.choices.presentersSources.push({ id: firstSource, label: firstSource })
+						}
+					}
+					if (mainSource) {
+						if (typeof mainSource === 'object') {
+							mainSource = mainSource.displayName ? mainSource.displayName : ''
+						}
+						let index = this.choices.presentersSources.findIndex((el) => el.id === mainSource)
+						if (index === -1) {
+							this.choices.presentersSources.push({ id: mainSource, label: mainSource })
 						}
 					}
 					if (videoSources?.length > 0) {
@@ -627,6 +638,7 @@ class BirdDogCloudInstance extends InstanceBase {
 		this.initFeedbacks()
 		this.initPresets()
 		this.initVariables()
+		this.subscribeFeedbacks()
 		this.checkFeedbacks()
 	}
 
@@ -841,6 +853,94 @@ class BirdDogCloudInstance extends InstanceBase {
 					return connection.id
 				}
 			}
+		}
+	}
+
+	subscribePresenterThumbnail(feedback) {
+		let connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
+		if (connection && this.socket) {
+			let connectionId = feedback.options.connection
+			let endpointId = connection.sourceId
+			this.sendPresenterCommand('toggleThumbs', {
+				sourceId: endpointId,
+				connectionId: connectionId,
+				enable: true,
+			})
+			;(async () => {
+				let subState = this.socket.isSubscribed(`/thumbs/${endpointId}/${connectionId}/0`)
+				if (!subState) {
+					let channel = this.socket.subscribe(`/thumbs/${endpointId}/${connectionId}/0`, { batch: true })
+					for await (let message of channel) {
+						this.generateThumbnails(connectionId, endpointId, message)
+					}
+				}
+			})()
+		}
+	}
+
+	unsubscribePresenterThumbnail(feedback) {
+		let connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
+		if (connection && this.socket) {
+			let connectionId = feedback.options.connection
+			let endpointId = connection.sourceId
+			if (this.socket.isSubscribed(`/thumbs/${endpointId}/${connectionId}/0`)) {
+				this.socket.unsubscribe(`/thumbs/${endpointId}/${connectionId}/0`)
+			}
+		}
+	}
+
+	async subscribeIndividualSource(feedback) {
+		let connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
+		if (connection && this.socket) {
+			let connectionId = feedback.options.connection
+			let endpointId = connection.sourceId
+			let sourceName = feedback.options.sourceName
+			this.sendPresenterCommand('toggleThumbs', {
+				sourceId: endpointId,
+				connectionId: connectionId,
+				enable: true,
+			})
+			;(async () => {
+				let subState = this.socket.isSubscribed(`/thumbs/${endpointId}/${connectionId}/${sourceName}`)
+				if (subState === false) {
+					let channel = this.socket.subscribe(`/thumbs/${endpointId}/${connectionId}/${sourceName}`, { batch: true })
+					for await (let message of channel) {
+						this.generateThumbnails(connectionId, endpointId, message, sourceName)
+					}
+				}
+			})()
+		}
+	}
+
+	async unsubscribeIndividualSource(feedback) {
+		let connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
+		if (connection && this.socket) {
+			let connectionId = feedback.options.connection
+			let endpointId = connection.sourceId
+			let sourceName = feedback.options.sourceName
+			if (this.socket.isSubscribed(`/thumbs/${endpointId}/${connectionId}/${sourceName}`)) {
+				this.socket.unsubscribe(`/thumbs/${endpointId}/${connectionId}/${sourceName}`)
+			}
+		}
+	}
+
+	async generateThumbnails(connectionId, endpointId, data, source) {
+		try {
+			// Validate that the data is a Base64-encoded string
+			if (!/^data:image\/jpg;base64,[A-Za-z0-9+/=]+$/.test(data)) {
+				this.log('debug', 'Invalid Base64 thumbnail data received')
+				return
+			}
+			const base64String = data.replace(/^data:image\/jpg;base64,/, '')
+			if (source) {
+				this.states.thumbnails[connectionId + `_${source}`] = base64String
+			} else {
+				this.states.thumbnails[connectionId] = base64String
+			}
+
+			this.checkFeedbacks('presenterThumbnail')
+		} catch (error) {
+			this.log('debug', `Failed to generate thumbnails for connection ${connectionId}: ${error.message}`)
 		}
 	}
 }

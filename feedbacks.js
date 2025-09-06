@@ -1,4 +1,5 @@
 import { combineRgb } from '@companion-module/base'
+import { connectLogo } from './utils.js'
 
 export function getFeedbacks() {
 	const feedbacks = {}
@@ -103,7 +104,7 @@ export function getFeedbacks() {
 
 	feedbacks['presenterLayout'] = {
 		type: 'boolean',
-		name: 'Presenter Layout',
+		name: 'Presenter - Current Layout',
 		description: 'Change style if a Presenter is set to the selected layout',
 		defaultStyle: {
 			bgcolor: ColorGreen,
@@ -131,7 +132,7 @@ export function getFeedbacks() {
 
 	feedbacks['presenterSource'] = {
 		type: 'boolean',
-		name: 'Presenter Source',
+		name: 'Presenter - Source',
 		description: 'Change style if a Presenter is set to the selected source',
 		defaultStyle: {
 			bgcolor: ColorGreen,
@@ -178,7 +179,7 @@ export function getFeedbacks() {
 
 	feedbacks['presenterAudioDevice'] = {
 		type: 'boolean',
-		name: 'Presenter Audio Device',
+		name: 'Presenter - Audio Device',
 		description: 'Change style if a Presenter is set to the selected audio device',
 		defaultStyle: {
 			bgcolor: ColorGreen,
@@ -206,7 +207,7 @@ export function getFeedbacks() {
 
 	feedbacks['presenterOverlayActive'] = {
 		type: 'boolean',
-		name: 'Presenter Overlay Active',
+		name: 'Presenter - Overlay Active',
 		description: 'Change style if a Presenter overlay is active',
 		defaultStyle: {
 			bgcolor: ColorGreen,
@@ -227,7 +228,7 @@ export function getFeedbacks() {
 
 	feedbacks['presenterPTZDevice'] = {
 		type: 'boolean',
-		name: 'Presenter PTZ Device',
+		name: 'Presenter - PTZ Device',
 		description: 'Change style if a Presenter is set to the selected PTZ device in Companion',
 		defaultStyle: {
 			bgcolor: ColorGreen,
@@ -311,7 +312,7 @@ export function getFeedbacks() {
 
 	feedbacks['presetActive'] = {
 		type: 'boolean',
-		name: 'PTZ Preset Active',
+		name: 'Presenter - PTZ Preset Active',
 		description: 'Change style if a PTZ preset is active',
 		defaultStyle: {
 			bgcolor: ColorGreen,
@@ -345,6 +346,64 @@ export function getFeedbacks() {
 		callback: (feedback) => {
 			let source = feedback.options.local ? this.states.ptzDevice.sourceName : feedback.options.device
 			return this.states.presets[`${source}`] === feedback.options.preset - 1
+		},
+	}
+
+	feedbacks['presenterThumbnail'] = {
+		type: 'advanced',
+		name: 'Presenter - Thumbnails',
+		description: 'Show the latest thumbnail preview for the selected Presenter (updates approximately every second)',
+		options: [
+			{
+				type: 'dropdown',
+				label: 'Presenter Connection',
+				id: 'connection',
+				choices: this.choices.presenters,
+				default: this.choices.presenters?.[0]?.id,
+			},
+			{
+				type: 'checkbox',
+				label: 'Use Individual Source',
+				id: 'source',
+				default: false,
+			},
+			{
+				type: 'dropdown',
+				label: 'Source',
+				id: 'sourceName',
+				choices: this.choices.presentersSources,
+				default: this.choices.presentersSources?.[0]?.id,
+				isVisibleExpression: '$(options:source)',
+			},
+		],
+		callback: (feedback) => {
+			let presenterState = this.states.connections?.some(
+				({ id, state }) => id === feedback.options.connection && state === 'CONNECTED',
+			)
+			if (presenterState) {
+				if (feedback.options.source) {
+					return {
+						png64:
+							this.states.thumbnails[`${feedback.options.connection}_${feedback.options.sourceName}`] ?? connectLogo,
+					}
+				} else {
+					return { png64: this.states.thumbnails[`${feedback.options.connection}`] ?? connectLogo }
+				}
+			} else {
+				return { png64: connectLogo }
+			}
+		},
+		subscribe: (feedback) => {
+			this.subscribePresenterThumbnail(feedback)
+			if (feedback.options.source) {
+				this.subscribeIndividualSource(feedback)
+			}
+		},
+		unsubscribe: (feedback) => {
+			this.unsubscribePresenterThumbnail(feedback)
+			if (feedback.options.source) {
+				this.unsubscribeIndividualSource(feedback)
+			}
 		},
 	}
 
