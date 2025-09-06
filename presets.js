@@ -1120,6 +1120,8 @@ export function getPresets() {
 						feedbackId: 'presenterThumbnail',
 						options: {
 							connection: `${id}`,
+							source: false,
+							sourceName: '',
 						},
 						style: {
 							bgcolor: ColorGreen,
@@ -1127,6 +1129,42 @@ export function getPresets() {
 					},
 				],
 			}
+			this.choices.presentersSources.forEach((videoSource) => {
+				let sourceName = videoSource.id
+				presets[`presenter_${name}_video_${sourceName}`] = {
+					type: 'button',
+					category: 'Presenter Thumbnails',
+					name: `Presenter ${name} Video Source ${sourceName}`,
+					options: {},
+					style: {
+						text: `${sourceName}`,
+						size: '10',
+						alignment: 'center:bottom',
+						pngalignment: 'center:top',
+						color: ColorWhite,
+						bgcolor: ColorBlack,
+					},
+					steps: [
+						{
+							down: [],
+							up: [],
+						},
+					],
+					feedbacks: [
+						{
+							feedbackId: 'presenterThumbnail',
+							options: {
+								connection: `${id}`,
+								source: true,
+								sourceName: `${sourceName}`,
+							},
+							style: {
+								bgcolor: ColorGreen,
+							},
+						},
+					],
+				}
+			})
 		})
 	}
 

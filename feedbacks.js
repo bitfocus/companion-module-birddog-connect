@@ -361,21 +361,49 @@ export function getFeedbacks() {
 				choices: this.choices.presenters,
 				default: this.choices.presenters?.[0]?.id,
 			},
+			{
+				type: 'checkbox',
+				label: 'Use Individual Source',
+				id: 'source',
+				default: false,
+			},
+			{
+				type: 'dropdown',
+				label: 'Source',
+				id: 'sourceName',
+				choices: this.choices.presentersSources,
+				default: this.choices.presentersSources?.[0]?.id,
+				isVisibleExpression: '$(options:source)',
+			},
 		],
 		callback: (feedback) => {
 			let presenterState = this.states.connections?.some(
 				({ id, state }) => id === feedback.options.connection && state === 'CONNECTED',
 			)
-
-			return presenterState
-				? { png64: this.states.thumbnails[`${feedback.options.connection}`] ?? connectLogo }
-				: { png64: connectLogo }
+			if (presenterState) {
+				if (feedback.options.source) {
+					return {
+						png64:
+							this.states.thumbnails[`${feedback.options.connection}_${feedback.options.sourceName}`] ?? connectLogo,
+					}
+				} else {
+					return { png64: this.states.thumbnails[`${feedback.options.connection}`] ?? connectLogo }
+				}
+			} else {
+				return { png64: connectLogo }
+			}
 		},
 		subscribe: (feedback) => {
 			this.subscribePresenterThumbnail(feedback)
+			if (feedback.options.source) {
+				this.subscribeIndividualSource(feedback)
+			}
 		},
 		unsubscribe: (feedback) => {
 			this.unsubscribePresenterThumbnail(feedback)
+			if (feedback.options.source) {
+				this.unsubscribeIndividualSource(feedback)
+			}
 		},
 	}
 
