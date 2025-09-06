@@ -15,7 +15,7 @@
 		"url": "git+https://github.com/bitfocus/companion-module-birddog-connect.git"
 	},
 	"dependencies": {
-		"@companion-module/base": "~1.13.1",
+		"@companion-module/base": "~1.12.1",
 		"eslint": "^9.35.0",
 		"socketcluster-client": "^19.2.7"
 	},
