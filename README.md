@@ -4,6 +4,11 @@ See [HELP.md](./companion/HELP.md) and [LICENSE](./LICENSE)
 
 ## Changelog
 
+### v1.3.0
+
+- New
+  - Feedback: Connection - Thumbnails
+
 ### v1.2.0
 
 - New
