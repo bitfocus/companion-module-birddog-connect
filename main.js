@@ -924,6 +924,74 @@ class BirdDogCloudInstance extends InstanceBase {
 		}
 	}
 
+	subscribeConnectionThumbnail(feedback) {
+		let connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
+		if (connection && this.socket) {
+			let connectionId = feedback.options.connection
+			let endpointId = connection.sourceId
+			this.sendPresenterCommand('toggleThumbs', {
+				sourceId: endpointId,
+				connectionId: connectionId,
+				enable: true,
+			})
+			;(async () => {
+				let subState = this.socket.isSubscribed(`/thumbs/${endpointId}/${connectionId}/0`)
+				if (!subState) {
+					let channel = this.socket.subscribe(`/thumbs/${endpointId}/${connectionId}/0`, { batch: true })
+					for await (let message of channel) {
+						this.generateThumbnails(connectionId, endpointId, message)
+					}
+				}
+			})()
+		}
+	}
+
+	unsubscribeConnectionThumbnail(feedback) {
+		let connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
+		if (connection && this.socket) {
+			let connectionId = feedback.options.connection
+			let endpointId = connection.sourceId
+			if (this.socket.isSubscribed(`/thumbs/${endpointId}/${connectionId}/0`)) {
+				this.socket.unsubscribe(`/thumbs/${endpointId}/${connectionId}/0`)
+			}
+		}
+	}
+
+	async subscribeConnectionIndividualSource(feedback) {
+		let connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
+		if (connection && this.socket) {
+			let connectionId = feedback.options.connection
+			let endpointId = connection.sourceId
+			let sourceName = feedback.options.sourceName
+			this.sendPresenterCommand('toggleThumbs', {
+				sourceId: endpointId,
+				connectionId: connectionId,
+				enable: true,
+			})
+			;(async () => {
+				let subState = this.socket.isSubscribed(`/thumbs/${endpointId}/${connectionId}/${sourceName}`)
+				if (subState === false) {
+					let channel = this.socket.subscribe(`/thumbs/${endpointId}/${connectionId}/${sourceName}`, { batch: true })
+					for await (let message of channel) {
+						this.generateThumbnails(connectionId, endpointId, message, sourceName)
+					}
+				}
+			})()
+		}
+	}
+
+	async unsubscribeConnectionIndividualSource(feedback) {
+		let connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
+		if (connection && this.socket) {
+			let connectionId = feedback.options.connection
+			let endpointId = connection.sourceId
+			let sourceName = feedback.options.sourceName
+			if (this.socket.isSubscribed(`/thumbs/${endpointId}/${connectionId}/${sourceName}`)) {
+				this.socket.unsubscribe(`/thumbs/${endpointId}/${connectionId}/${sourceName}`)
+			}
+		}
+	}
+
 	async generateThumbnails(connectionId, endpointId, data, source) {
 		try {
 			// Validate that the data is a Base64-encoded string
@@ -938,7 +1006,7 @@ class BirdDogCloudInstance extends InstanceBase {
 				this.states.thumbnails[connectionId] = base64String
 			}
 
-			this.checkFeedbacks('presenterThumbnail')
+			this.checkFeedbacks('presenterThumbnail', 'connectionThumbnail')
 		} catch (error) {
 			this.log('debug', `Failed to generate thumbnails for connection ${connectionId}: ${error.message}`)
 		}

@@ -407,5 +407,36 @@ export function getFeedbacks() {
 		},
 	}
 
+	feedbacks['connectionThumbnail'] = {
+		type: 'advanced',
+		name: 'Connection - Thumbnails',
+		description: 'Show the latest thumbnail preview for the selected Connection (updates approximately every second)',
+		options: [
+			{
+				type: 'dropdown',
+				label: 'Connection',
+				id: 'connection',
+				choices: this.choices.connections,
+				default: this.choices.connections?.[0]?.id,
+			},
+		],
+		callback: (feedback) => {
+			let connectionState = this.states.connections?.some(
+				({ id, state }) => id === feedback.options.connection && state === 'CONNECTED',
+			)
+			if (connectionState) {
+				return { png64: this.states.thumbnails[`${feedback.options.connection}`] ?? connectLogo }
+			} else {
+				return { png64: connectLogo }
+			}
+		},
+		subscribe: (feedback) => {
+			this.subscribeConnectionThumbnail(feedback)
+		},
+		unsubscribe: (feedback) => {
+			this.unsubscribeConnectionThumbnail(feedback)
+		},
+	}
+
 	return feedbacks
 }
