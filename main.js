@@ -579,6 +579,12 @@ class BirdDogCloudInstance extends InstanceBase {
 		this.initPresets()
 		this.initVariables()
 		this.checkFeedbacks()
+		
+		// Trigger thumbnail feedback checks if connections have sourceId available
+		// This will re-trigger subscriptions for any thumbnail feedbacks that are active
+		if (this.states.connections?.some((conn) => conn.sourceId)) {
+			this.checkFeedbacks('presenterThumbnail', 'connectionThumbnail')
+		}
 	}
 
 	updateConnections(data) {
@@ -601,6 +607,17 @@ class BirdDogCloudInstance extends InstanceBase {
 				[`connection_status_${name}`]: connectionStates[`${newData.state}`],
 			})
 			this.checkFeedbacks('connectionStatus', 'connectionConnected')
+			
+			// Trigger thumbnail feedback checks when connection state changes to CONNECTED
+			// This will re-trigger subscriptions if sourceId is now available
+			if (newData.state === 'CONNECTED' && connection?.sourceId) {
+				this.checkFeedbacks('presenterThumbnail', 'connectionThumbnail')
+			}
+		}
+		
+		// Also check if sourceId was added to the connection
+		if ('sourceId' in newData && connection?.sourceId) {
+			this.checkFeedbacks('presenterThumbnail', 'connectionThumbnail')
 		}
 	}
 
@@ -858,7 +875,7 @@ class BirdDogCloudInstance extends InstanceBase {
 
 	subscribePresenterThumbnail(feedback) {
 		let connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
-		if (connection && this.socket) {
+		if (connection && this.socket && connection.sourceId) {
 			let connectionId = feedback.options.connection
 			let endpointId = connection.sourceId
 			this.sendPresenterCommand('toggleThumbs', {
@@ -891,7 +908,7 @@ class BirdDogCloudInstance extends InstanceBase {
 
 	async subscribeIndividualSource(feedback) {
 		let connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
-		if (connection && this.socket) {
+		if (connection && this.socket && connection.sourceId) {
 			let connectionId = feedback.options.connection
 			let endpointId = connection.sourceId
 			let sourceName = feedback.options.sourceName
@@ -926,7 +943,7 @@ class BirdDogCloudInstance extends InstanceBase {
 
 	subscribeConnectionThumbnail(feedback) {
 		let connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
-		if (connection && this.socket) {
+		if (connection && this.socket && connection.sourceId) {
 			let connectionId = feedback.options.connection
 			let endpointId = connection.sourceId
 			this.sendPresenterCommand('toggleThumbs', {
@@ -953,41 +970,6 @@ class BirdDogCloudInstance extends InstanceBase {
 			let endpointId = connection.sourceId
 			if (this.socket.isSubscribed(`/thumbs/${endpointId}/${connectionId}/0`)) {
 				this.socket.unsubscribe(`/thumbs/${endpointId}/${connectionId}/0`)
-			}
-		}
-	}
-
-	async subscribeConnectionIndividualSource(feedback) {
-		let connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
-		if (connection && this.socket) {
-			let connectionId = feedback.options.connection
-			let endpointId = connection.sourceId
-			let sourceName = feedback.options.sourceName
-			this.sendPresenterCommand('toggleThumbs', {
-				sourceId: endpointId,
-				connectionId: connectionId,
-				enable: true,
-			})
-			;(async () => {
-				let subState = this.socket.isSubscribed(`/thumbs/${endpointId}/${connectionId}/${sourceName}`)
-				if (subState === false) {
-					let channel = this.socket.subscribe(`/thumbs/${endpointId}/${connectionId}/${sourceName}`, { batch: true })
-					for await (let message of channel) {
-						this.generateThumbnails(connectionId, endpointId, message, sourceName)
-					}
-				}
-			})()
-		}
-	}
-
-	async unsubscribeConnectionIndividualSource(feedback) {
-		let connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
-		if (connection && this.socket) {
-			let connectionId = feedback.options.connection
-			let endpointId = connection.sourceId
-			let sourceName = feedback.options.sourceName
-			if (this.socket.isSubscribed(`/thumbs/${endpointId}/${connectionId}/${sourceName}`)) {
-				this.socket.unsubscribe(`/thumbs/${endpointId}/${connectionId}/${sourceName}`)
 			}
 		}
 	}
