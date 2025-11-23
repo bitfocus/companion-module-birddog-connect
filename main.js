@@ -579,7 +579,7 @@ class BirdDogCloudInstance extends InstanceBase {
 		this.initPresets()
 		this.initVariables()
 		this.checkFeedbacks()
-		
+
 		// Trigger thumbnail feedback checks if connections have sourceId available
 		// This will re-trigger subscriptions for any thumbnail feedbacks that are active
 		if (this.states.connections?.some((conn) => conn.sourceId)) {
@@ -607,14 +607,14 @@ class BirdDogCloudInstance extends InstanceBase {
 				[`connection_status_${name}`]: connectionStates[`${newData.state}`],
 			})
 			this.checkFeedbacks('connectionStatus', 'connectionConnected')
-			
+
 			// Trigger thumbnail feedback checks when connection state changes to CONNECTED
 			// This will re-trigger subscriptions if sourceId is now available
 			if (newData.state === 'CONNECTED' && connection?.sourceId) {
 				this.checkFeedbacks('presenterThumbnail', 'connectionThumbnail')
 			}
 		}
-		
+
 		// Also check if sourceId was added to the connection
 		if ('sourceId' in newData && connection?.sourceId) {
 			this.checkFeedbacks('presenterThumbnail', 'connectionThumbnail')
@@ -877,7 +877,7 @@ class BirdDogCloudInstance extends InstanceBase {
 		if (!this.socket) return
 
 		const channelPath = `/thumbs/${endpointId}/${connectionId}/${sourceName}`
-		
+
 		// Check if already subscribed
 		if (this.socket.isSubscribed(channelPath)) {
 			return
@@ -1004,7 +1004,7 @@ class BirdDogCloudInstance extends InstanceBase {
 		try {
 			const base64String = data.replace(/^data:image\/jpg;base64,/, '')
 			const thumbnailKey = source ? `${connectionId}_${source}` : connectionId
-			
+
 			this.states.thumbnails[thumbnailKey] = base64String
 			this.checkFeedbacks('presenterThumbnail', 'connectionThumbnail')
 		} catch (error) {

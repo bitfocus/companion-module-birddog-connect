@@ -193,6 +193,38 @@ export function getPresets() {
 					},
 				],
 			}
+
+			presets[`connection_${name}_thumbnail`] = {
+				type: 'button',
+				category: 'Connection Thumbnails',
+				name: `Connection ${name} Thumbnail`,
+				options: {},
+				style: {
+					text: `${name}`,
+					size: '14',
+					alignment: 'center:bottom',
+					pngalignment: 'center:top',
+					color: ColorWhite,
+					bgcolor: ColorBlack,
+				},
+				steps: [
+					{
+						down: [],
+						up: [],
+					},
+				],
+				feedbacks: [
+					{
+						feedbackId: 'connectionThumbnail',
+						options: {
+							connection: `${id}`,
+						},
+						style: {
+							bgcolor: ColorGreen,
+						},
+					},
+				],
+			}
 		})
 	}
 
