@@ -22,6 +22,7 @@ export function getPresets() {
 		this.states.endpoints.forEach((endpoint) => {
 			let id = endpoint.id
 			let name = endpoint.name
+			if (!name) return
 			let variableName = name.replace(/[\W]/gi, '_')
 
 			presets[`endpoint_${name}_status`] = {
@@ -231,7 +232,8 @@ export function getPresets() {
 	if (this.states.recordings) {
 		this.states.recordings.forEach((recording) => {
 			let id = recording.id
-			let name = recording.parameters.input
+			let name = recording.parameters?.input
+			if (!name) return
 			let variableName = name.replace(/[\W]/gi, '_')
 
 			presets[`recording_${name}_start`] = {

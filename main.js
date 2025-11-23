@@ -58,6 +58,16 @@ class BirdDogCloudInstance extends InstanceBase {
 
 	async destroy() {
 		this.log('debug', 'destroy')
+		
+		// Clean up socket connection
+		if (this.socket) {
+			try {
+				this.socket.disconnect()
+			} catch (error) {
+				this.log('debug', `Error disconnecting socket: ${error.message}`)
+			}
+			this.socket = null
+		}
 	}
 
 	async configUpdated(config) {
@@ -248,14 +258,25 @@ class BirdDogCloudInstance extends InstanceBase {
 			})
 			.then((text) => {
 				if (text) {
-					let parsedToken = JSON.parse(Buffer.from(text.split('.')[1], 'base64').toString())
+					const tokenParts = text.split('.')
+					if (tokenParts.length < 2) {
+						this.log('debug', 'Invalid token format')
+						return false
+					}
 
-					if (parsedToken) {
-						this.cloud.refreshToken = text
-						this.cloud.refreshTokenExp = parsedToken?.exp
-						this.cloud.companyId = parsedToken.cid
-						return true
-					} else {
+					try {
+						let parsedToken = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString())
+
+						if (parsedToken) {
+							this.cloud.refreshToken = text
+							this.cloud.refreshTokenExp = parsedToken?.exp
+							this.cloud.companyId = parsedToken.cid
+							return true
+						} else {
+							return false
+						}
+					} catch (error) {
+						this.log('debug', `Failed to parse token: ${error.message}`)
 						return false
 					}
 				}
@@ -269,7 +290,7 @@ class BirdDogCloudInstance extends InstanceBase {
 	async checkTokenExpiry() {
 		let now = Date.now() / 1000
 
-		if (this.cloud.refreshTokenExp > now) {
+		if (this.cloud.refreshTokenExp && this.cloud.refreshTokenExp > now) {
 			return true
 		} else {
 			let newToken = await this.getRefreshToken()
@@ -296,11 +317,22 @@ class BirdDogCloudInstance extends InstanceBase {
 			})
 			.then((json) => {
 				if (json) {
-					this.cloud.websocketToken = json
-					let parsedToken = JSON.parse(Buffer.from(json.split('.')[1], 'base64').toString())
-					this.cloud.websocketTokenExp = parsedToken?.exp
-					this.websocketAuthEngine.saveToken('websocketToken', json)
-					return true
+					const tokenParts = json.split('.')
+					if (tokenParts.length < 2) {
+						this.log('debug', 'Invalid websocket token format')
+						return false
+					}
+
+					try {
+						this.cloud.websocketToken = json
+						let parsedToken = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString())
+						this.cloud.websocketTokenExp = parsedToken?.exp
+						this.websocketAuthEngine.saveToken('websocketToken', json)
+						return true
+					} catch (error) {
+						this.log('debug', `Failed to parse websocket token: ${error.message}`)
+						return false
+					}
 				} else {
 					return false
 				}
@@ -592,6 +624,11 @@ class BirdDogCloudInstance extends InstanceBase {
 		let newData = data.data
 
 		let connection = this.states.connections?.find(({ id }) => id === connectionId)
+		if (!connection) {
+			this.log('debug', `Connection ${connectionId} not found for update`)
+			return
+		}
+
 		let name = connection.id
 		name = this.getConnectionDisplayName(connection)
 
@@ -666,10 +703,12 @@ class BirdDogCloudInstance extends InstanceBase {
 		if ('online' in newData) {
 			let endpoint = this.states.endpoints?.find(({ id }) => id === endpointId)
 
-			let name = endpoint?.name
-			let cleanName = name.replace(/[\W]/gi, '_')
-			this.setVariableValues({ [`endpoint_status_${cleanName}`]: newData.online ? 'Connected' : 'Offline' })
-			this.checkFeedbacks('endpointOnline')
+			if (endpoint?.name) {
+				let name = endpoint.name
+				let cleanName = name.replace(/[\W]/gi, '_')
+				this.setVariableValues({ [`endpoint_status_${cleanName}`]: newData.online ? 'Connected' : 'Offline' })
+				this.checkFeedbacks('endpointOnline')
+			}
 		}
 		if ('name' in newData) {
 			this.setupEndpoints()
@@ -718,10 +757,12 @@ class BirdDogCloudInstance extends InstanceBase {
 
 		if ('isStarted' in newData) {
 			let recording = this.states.recordings?.find(({ id }) => id === recordingId)
-			let name = recording.parameters?.input
-			let cleanName = name.replace(/[\W]/gi, '_')
-			this.setVariableValues({ [`recording_status_${cleanName}`]: newData.isStarted ? 'Recording' : 'Stopped' })
-			this.checkFeedbacks('recordingActive')
+			if (recording?.parameters?.input) {
+				let name = recording.parameters.input
+				let cleanName = name.replace(/[\W]/gi, '_')
+				this.setVariableValues({ [`recording_status_${cleanName}`]: newData.isStarted ? 'Recording' : 'Stopped' })
+				this.checkFeedbacks('recordingActive')
+			}
 		}
 	}
 
@@ -833,7 +874,7 @@ class BirdDogCloudInstance extends InstanceBase {
 				this.checkFeedbacks('presenterOverlayActive')
 				break
 			case 'ptz':
-				if (!this.states.ptzDevice.sourceId) {
+				if (!this.states.ptzDevice?.sourceId) {
 					let connection = this.states.connections.find(({ id }) => id === connectionId)
 					this.states.ptzDevice = {
 						sourceId: connection?.sourceId,
