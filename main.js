@@ -58,6 +58,16 @@ class BirdDogCloudInstance extends InstanceBase {
 
 	async destroy() {
 		this.log('debug', 'destroy')
+
+		// Clean up socket connection
+		if (this.socket) {
+			try {
+				this.socket.disconnect()
+			} catch (error) {
+				this.log('debug', `Error disconnecting socket: ${error.message}`)
+			}
+			this.socket = null
+		}
 	}
 
 	async configUpdated(config) {
@@ -248,14 +258,25 @@ class BirdDogCloudInstance extends InstanceBase {
 			})
 			.then((text) => {
 				if (text) {
-					let parsedToken = JSON.parse(Buffer.from(text.split('.')[1], 'base64').toString())
+					const tokenParts = text.split('.')
+					if (tokenParts.length < 2) {
+						this.log('debug', 'Invalid token format')
+						return false
+					}
 
-					if (parsedToken) {
-						this.cloud.refreshToken = text
-						this.cloud.refreshTokenExp = parsedToken?.exp
-						this.cloud.companyId = parsedToken.cid
-						return true
-					} else {
+					try {
+						let parsedToken = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString())
+
+						if (parsedToken) {
+							this.cloud.refreshToken = text
+							this.cloud.refreshTokenExp = parsedToken?.exp
+							this.cloud.companyId = parsedToken.cid
+							return true
+						} else {
+							return false
+						}
+					} catch (error) {
+						this.log('debug', `Failed to parse token: ${error.message}`)
 						return false
 					}
 				}
@@ -269,7 +290,7 @@ class BirdDogCloudInstance extends InstanceBase {
 	async checkTokenExpiry() {
 		let now = Date.now() / 1000
 
-		if (this.cloud.refreshTokenExp > now) {
+		if (this.cloud.refreshTokenExp && this.cloud.refreshTokenExp > now) {
 			return true
 		} else {
 			let newToken = await this.getRefreshToken()
@@ -296,11 +317,22 @@ class BirdDogCloudInstance extends InstanceBase {
 			})
 			.then((json) => {
 				if (json) {
-					this.cloud.websocketToken = json
-					let parsedToken = JSON.parse(Buffer.from(json.split('.')[1], 'base64').toString())
-					this.cloud.websocketTokenExp = parsedToken?.exp
-					this.websocketAuthEngine.saveToken('websocketToken', json)
-					return true
+					const tokenParts = json.split('.')
+					if (tokenParts.length < 2) {
+						this.log('debug', 'Invalid websocket token format')
+						return false
+					}
+
+					try {
+						this.cloud.websocketToken = json
+						let parsedToken = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString())
+						this.cloud.websocketTokenExp = parsedToken?.exp
+						this.websocketAuthEngine.saveToken('websocketToken', json)
+						return true
+					} catch (error) {
+						this.log('debug', `Failed to parse websocket token: ${error.message}`)
+						return false
+					}
 				} else {
 					return false
 				}
@@ -579,6 +611,12 @@ class BirdDogCloudInstance extends InstanceBase {
 		this.initPresets()
 		this.initVariables()
 		this.checkFeedbacks()
+
+		// Trigger thumbnail feedback checks if connections have sourceId available
+		// This will re-trigger subscriptions for any thumbnail feedbacks that are active
+		if (this.states.connections?.some((conn) => conn.sourceId)) {
+			this.checkFeedbacks('presenterThumbnail', 'connectionThumbnail')
+		}
 	}
 
 	updateConnections(data) {
@@ -586,6 +624,11 @@ class BirdDogCloudInstance extends InstanceBase {
 		let newData = data.data
 
 		let connection = this.states.connections?.find(({ id }) => id === connectionId)
+		if (!connection) {
+			this.log('debug', `Connection ${connectionId} not found for update`)
+			return
+		}
+
 		let name = connection.id
 		name = this.getConnectionDisplayName(connection)
 
@@ -601,6 +644,17 @@ class BirdDogCloudInstance extends InstanceBase {
 				[`connection_status_${name}`]: connectionStates[`${newData.state}`],
 			})
 			this.checkFeedbacks('connectionStatus', 'connectionConnected')
+
+			// Trigger thumbnail feedback checks when connection state changes to CONNECTED
+			// This will re-trigger subscriptions if sourceId is now available
+			if (newData.state === 'CONNECTED' && connection?.sourceId) {
+				this.checkFeedbacks('presenterThumbnail', 'connectionThumbnail')
+			}
+		}
+
+		// Also check if sourceId was added to the connection
+		if ('sourceId' in newData && connection?.sourceId) {
+			this.checkFeedbacks('presenterThumbnail', 'connectionThumbnail')
 		}
 	}
 
@@ -649,10 +703,12 @@ class BirdDogCloudInstance extends InstanceBase {
 		if ('online' in newData) {
 			let endpoint = this.states.endpoints?.find(({ id }) => id === endpointId)
 
-			let name = endpoint?.name
-			let cleanName = name.replace(/[\W]/gi, '_')
-			this.setVariableValues({ [`endpoint_status_${cleanName}`]: newData.online ? 'Connected' : 'Offline' })
-			this.checkFeedbacks('endpointOnline')
+			if (endpoint?.name) {
+				let name = endpoint.name
+				let cleanName = name.replace(/[\W]/gi, '_')
+				this.setVariableValues({ [`endpoint_status_${cleanName}`]: newData.online ? 'Connected' : 'Offline' })
+				this.checkFeedbacks('endpointOnline')
+			}
 		}
 		if ('name' in newData) {
 			this.setupEndpoints()
@@ -701,10 +757,12 @@ class BirdDogCloudInstance extends InstanceBase {
 
 		if ('isStarted' in newData) {
 			let recording = this.states.recordings?.find(({ id }) => id === recordingId)
-			let name = recording.parameters?.input
-			let cleanName = name.replace(/[\W]/gi, '_')
-			this.setVariableValues({ [`recording_status_${cleanName}`]: newData.isStarted ? 'Recording' : 'Stopped' })
-			this.checkFeedbacks('recordingActive')
+			if (recording?.parameters?.input) {
+				let name = recording.parameters.input
+				let cleanName = name.replace(/[\W]/gi, '_')
+				this.setVariableValues({ [`recording_status_${cleanName}`]: newData.isStarted ? 'Recording' : 'Stopped' })
+				this.checkFeedbacks('recordingActive')
+			}
 		}
 	}
 
@@ -816,7 +874,7 @@ class BirdDogCloudInstance extends InstanceBase {
 				this.checkFeedbacks('presenterOverlayActive')
 				break
 			case 'ptz':
-				if (!this.states.ptzDevice.sourceId) {
+				if (!this.states.ptzDevice?.sourceId) {
 					let connection = this.states.connections.find(({ id }) => id === connectionId)
 					this.states.ptzDevice = {
 						sourceId: connection?.sourceId,
@@ -856,91 +914,142 @@ class BirdDogCloudInstance extends InstanceBase {
 		}
 	}
 
-	subscribePresenterThumbnail(feedback) {
-		let connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
-		if (connection && this.socket) {
-			let connectionId = feedback.options.connection
-			let endpointId = connection.sourceId
-			this.sendPresenterCommand('toggleThumbs', {
-				sourceId: endpointId,
-				connectionId: connectionId,
-				enable: true,
-			})
-			;(async () => {
-				let subState = this.socket.isSubscribed(`/thumbs/${endpointId}/${connectionId}/0`)
-				if (!subState) {
-					let channel = this.socket.subscribe(`/thumbs/${endpointId}/${connectionId}/0`, { batch: true })
-					for await (let message of channel) {
-						this.generateThumbnails(connectionId, endpointId, message)
+	_subscribeThumbnailChannel(connectionId, endpointId, sourceName = '0') {
+		if (!this.socket) return
+
+		const channelPath = `/thumbs/${endpointId}/${connectionId}/${sourceName}`
+
+		// Check if already subscribed
+		if (this.socket.isSubscribed(channelPath)) {
+			return
+		}
+
+		// Subscribe to thumbnail channel with error handling
+		;(async () => {
+			try {
+				const channel = this.socket.subscribe(channelPath, { batch: true })
+				for await (const message of channel) {
+					try {
+						this.generateThumbnails(connectionId, endpointId, message, sourceName === '0' ? undefined : sourceName)
+					} catch (error) {
+						this.log('debug', `Error processing thumbnail for ${connectionId}: ${error.message}`)
 					}
 				}
-			})()
+			} catch (error) {
+				this.log('debug', `Thumbnail subscription error for ${channelPath}: ${error.message}`)
+			}
+		})()
+	}
+
+	_unsubscribeThumbnailChannel(connectionId, endpointId, sourceName = '0') {
+		if (!this.socket) return
+
+		const channelPath = `/thumbs/${endpointId}/${connectionId}/${sourceName}`
+		if (this.socket.isSubscribed(channelPath)) {
+			this.socket.unsubscribe(channelPath)
 		}
+	}
+
+	subscribePresenterThumbnail(feedback) {
+		const connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
+		if (!connection || !this.socket || !connection.sourceId) return
+
+		const connectionId = feedback.options.connection
+		const endpointId = connection.sourceId
+
+		this.sendPresenterCommand('toggleThumbs', {
+			sourceId: endpointId,
+			connectionId: connectionId,
+			enable: true,
+		})
+
+		this._subscribeThumbnailChannel(connectionId, endpointId)
 	}
 
 	unsubscribePresenterThumbnail(feedback) {
-		let connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
-		if (connection && this.socket) {
-			let connectionId = feedback.options.connection
-			let endpointId = connection.sourceId
-			if (this.socket.isSubscribed(`/thumbs/${endpointId}/${connectionId}/0`)) {
-				this.socket.unsubscribe(`/thumbs/${endpointId}/${connectionId}/0`)
-			}
-		}
+		const connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
+		if (!connection || !this.socket || !connection.sourceId) return
+
+		const connectionId = feedback.options.connection
+		const endpointId = connection.sourceId
+
+		this._unsubscribeThumbnailChannel(connectionId, endpointId)
 	}
 
-	async subscribeIndividualSource(feedback) {
-		let connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
-		if (connection && this.socket) {
-			let connectionId = feedback.options.connection
-			let endpointId = connection.sourceId
-			let sourceName = feedback.options.sourceName
-			this.sendPresenterCommand('toggleThumbs', {
-				sourceId: endpointId,
-				connectionId: connectionId,
-				enable: true,
-			})
-			;(async () => {
-				let subState = this.socket.isSubscribed(`/thumbs/${endpointId}/${connectionId}/${sourceName}`)
-				if (subState === false) {
-					let channel = this.socket.subscribe(`/thumbs/${endpointId}/${connectionId}/${sourceName}`, { batch: true })
-					for await (let message of channel) {
-						this.generateThumbnails(connectionId, endpointId, message, sourceName)
-					}
-				}
-			})()
-		}
+	subscribeIndividualSource(feedback) {
+		const connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
+		if (!connection || !this.socket || !connection.sourceId || !feedback.options.sourceName) return
+
+		const connectionId = feedback.options.connection
+		const endpointId = connection.sourceId
+		const sourceName = feedback.options.sourceName
+
+		this.sendPresenterCommand('toggleThumbs', {
+			sourceId: endpointId,
+			connectionId: connectionId,
+			enable: true,
+		})
+
+		this._subscribeThumbnailChannel(connectionId, endpointId, sourceName)
 	}
 
-	async unsubscribeIndividualSource(feedback) {
-		let connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
-		if (connection && this.socket) {
-			let connectionId = feedback.options.connection
-			let endpointId = connection.sourceId
-			let sourceName = feedback.options.sourceName
-			if (this.socket.isSubscribed(`/thumbs/${endpointId}/${connectionId}/${sourceName}`)) {
-				this.socket.unsubscribe(`/thumbs/${endpointId}/${connectionId}/${sourceName}`)
-			}
-		}
+	unsubscribeIndividualSource(feedback) {
+		const connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
+		if (!connection || !this.socket || !connection.sourceId || !feedback.options.sourceName) return
+
+		const connectionId = feedback.options.connection
+		const endpointId = connection.sourceId
+		const sourceName = feedback.options.sourceName
+
+		this._unsubscribeThumbnailChannel(connectionId, endpointId, sourceName)
 	}
 
-	async generateThumbnails(connectionId, endpointId, data, source) {
+	subscribeConnectionThumbnail(feedback) {
+		const connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
+		if (!connection || !this.socket || !connection.sourceId) return
+
+		const connectionId = feedback.options.connection
+		const endpointId = connection.sourceId
+
+		this.sendPresenterCommand('toggleThumbs', {
+			sourceId: endpointId,
+			connectionId: connectionId,
+			enable: true,
+		})
+
+		this._subscribeThumbnailChannel(connectionId, endpointId)
+	}
+
+	unsubscribeConnectionThumbnail(feedback) {
+		const connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
+		if (!connection || !this.socket || !connection.sourceId) return
+
+		const connectionId = feedback.options.connection
+		const endpointId = connection.sourceId
+
+		this._unsubscribeThumbnailChannel(connectionId, endpointId)
+	}
+
+	generateThumbnails(connectionId, endpointId, data, source) {
+		if (!data || typeof data !== 'string') {
+			this.log('debug', `Invalid thumbnail data received for connection ${connectionId}`)
+			return
+		}
+
+		// Validate that the data is a Base64-encoded string
+		if (!/^data:image\/jpg;base64,[A-Za-z0-9+/=]+$/.test(data)) {
+			this.log('debug', `Invalid Base64 thumbnail data format for connection ${connectionId}`)
+			return
+		}
+
 		try {
-			// Validate that the data is a Base64-encoded string
-			if (!/^data:image\/jpg;base64,[A-Za-z0-9+/=]+$/.test(data)) {
-				this.log('debug', 'Invalid Base64 thumbnail data received')
-				return
-			}
 			const base64String = data.replace(/^data:image\/jpg;base64,/, '')
-			if (source) {
-				this.states.thumbnails[connectionId + `_${source}`] = base64String
-			} else {
-				this.states.thumbnails[connectionId] = base64String
-			}
+			const thumbnailKey = source ? `${connectionId}_${source}` : connectionId
 
-			this.checkFeedbacks('presenterThumbnail')
+			this.states.thumbnails[thumbnailKey] = base64String
+			this.checkFeedbacks('presenterThumbnail', 'connectionThumbnail')
 		} catch (error) {
-			this.log('debug', `Failed to generate thumbnails for connection ${connectionId}: ${error.message}`)
+			this.log('debug', `Failed to process thumbnail for connection ${connectionId}: ${error.message}`)
 		}
 	}
 }
