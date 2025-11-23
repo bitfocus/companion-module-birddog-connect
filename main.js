@@ -58,7 +58,7 @@ class BirdDogCloudInstance extends InstanceBase {
 
 	async destroy() {
 		this.log('debug', 'destroy')
-		
+
 		// Clean up socket connection
 		if (this.socket) {
 			try {
