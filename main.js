@@ -873,124 +873,142 @@ class BirdDogCloudInstance extends InstanceBase {
 		}
 	}
 
-	subscribePresenterThumbnail(feedback) {
-		let connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
-		if (connection && this.socket && connection.sourceId) {
-			let connectionId = feedback.options.connection
-			let endpointId = connection.sourceId
-			this.sendPresenterCommand('toggleThumbs', {
-				sourceId: endpointId,
-				connectionId: connectionId,
-				enable: true,
-			})
-			;(async () => {
-				let subState = this.socket.isSubscribed(`/thumbs/${endpointId}/${connectionId}/0`)
-				if (!subState) {
-					let channel = this.socket.subscribe(`/thumbs/${endpointId}/${connectionId}/0`, { batch: true })
-					for await (let message of channel) {
-						this.generateThumbnails(connectionId, endpointId, message)
+	_subscribeThumbnailChannel(connectionId, endpointId, sourceName = '0') {
+		if (!this.socket) return
+
+		const channelPath = `/thumbs/${endpointId}/${connectionId}/${sourceName}`
+		
+		// Check if already subscribed
+		if (this.socket.isSubscribed(channelPath)) {
+			return
+		}
+
+		// Subscribe to thumbnail channel with error handling
+		;(async () => {
+			try {
+				const channel = this.socket.subscribe(channelPath, { batch: true })
+				for await (const message of channel) {
+					try {
+						this.generateThumbnails(connectionId, endpointId, message, sourceName === '0' ? undefined : sourceName)
+					} catch (error) {
+						this.log('debug', `Error processing thumbnail for ${connectionId}: ${error.message}`)
 					}
 				}
-			})()
+			} catch (error) {
+				this.log('debug', `Thumbnail subscription error for ${channelPath}: ${error.message}`)
+			}
+		})()
+	}
+
+	_unsubscribeThumbnailChannel(connectionId, endpointId, sourceName = '0') {
+		if (!this.socket) return
+
+		const channelPath = `/thumbs/${endpointId}/${connectionId}/${sourceName}`
+		if (this.socket.isSubscribed(channelPath)) {
+			this.socket.unsubscribe(channelPath)
 		}
+	}
+
+	subscribePresenterThumbnail(feedback) {
+		const connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
+		if (!connection || !this.socket || !connection.sourceId) return
+
+		const connectionId = feedback.options.connection
+		const endpointId = connection.sourceId
+
+		this.sendPresenterCommand('toggleThumbs', {
+			sourceId: endpointId,
+			connectionId: connectionId,
+			enable: true,
+		})
+
+		this._subscribeThumbnailChannel(connectionId, endpointId)
 	}
 
 	unsubscribePresenterThumbnail(feedback) {
-		let connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
-		if (connection && this.socket) {
-			let connectionId = feedback.options.connection
-			let endpointId = connection.sourceId
-			if (this.socket.isSubscribed(`/thumbs/${endpointId}/${connectionId}/0`)) {
-				this.socket.unsubscribe(`/thumbs/${endpointId}/${connectionId}/0`)
-			}
-		}
+		const connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
+		if (!connection || !this.socket || !connection.sourceId) return
+
+		const connectionId = feedback.options.connection
+		const endpointId = connection.sourceId
+
+		this._unsubscribeThumbnailChannel(connectionId, endpointId)
 	}
 
-	async subscribeIndividualSource(feedback) {
-		let connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
-		if (connection && this.socket && connection.sourceId) {
-			let connectionId = feedback.options.connection
-			let endpointId = connection.sourceId
-			let sourceName = feedback.options.sourceName
-			this.sendPresenterCommand('toggleThumbs', {
-				sourceId: endpointId,
-				connectionId: connectionId,
-				enable: true,
-			})
-			;(async () => {
-				let subState = this.socket.isSubscribed(`/thumbs/${endpointId}/${connectionId}/${sourceName}`)
-				if (subState === false) {
-					let channel = this.socket.subscribe(`/thumbs/${endpointId}/${connectionId}/${sourceName}`, { batch: true })
-					for await (let message of channel) {
-						this.generateThumbnails(connectionId, endpointId, message, sourceName)
-					}
-				}
-			})()
-		}
+	subscribeIndividualSource(feedback) {
+		const connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
+		if (!connection || !this.socket || !connection.sourceId || !feedback.options.sourceName) return
+
+		const connectionId = feedback.options.connection
+		const endpointId = connection.sourceId
+		const sourceName = feedback.options.sourceName
+
+		this.sendPresenterCommand('toggleThumbs', {
+			sourceId: endpointId,
+			connectionId: connectionId,
+			enable: true,
+		})
+
+		this._subscribeThumbnailChannel(connectionId, endpointId, sourceName)
 	}
 
-	async unsubscribeIndividualSource(feedback) {
-		let connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
-		if (connection && this.socket) {
-			let connectionId = feedback.options.connection
-			let endpointId = connection.sourceId
-			let sourceName = feedback.options.sourceName
-			if (this.socket.isSubscribed(`/thumbs/${endpointId}/${connectionId}/${sourceName}`)) {
-				this.socket.unsubscribe(`/thumbs/${endpointId}/${connectionId}/${sourceName}`)
-			}
-		}
+	unsubscribeIndividualSource(feedback) {
+		const connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
+		if (!connection || !this.socket || !connection.sourceId || !feedback.options.sourceName) return
+
+		const connectionId = feedback.options.connection
+		const endpointId = connection.sourceId
+		const sourceName = feedback.options.sourceName
+
+		this._unsubscribeThumbnailChannel(connectionId, endpointId, sourceName)
 	}
 
 	subscribeConnectionThumbnail(feedback) {
-		let connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
-		if (connection && this.socket && connection.sourceId) {
-			let connectionId = feedback.options.connection
-			let endpointId = connection.sourceId
-			this.sendPresenterCommand('toggleThumbs', {
-				sourceId: endpointId,
-				connectionId: connectionId,
-				enable: true,
-			})
-			;(async () => {
-				let subState = this.socket.isSubscribed(`/thumbs/${endpointId}/${connectionId}/0`)
-				if (!subState) {
-					let channel = this.socket.subscribe(`/thumbs/${endpointId}/${connectionId}/0`, { batch: true })
-					for await (let message of channel) {
-						this.generateThumbnails(connectionId, endpointId, message)
-					}
-				}
-			})()
-		}
+		const connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
+		if (!connection || !this.socket || !connection.sourceId) return
+
+		const connectionId = feedback.options.connection
+		const endpointId = connection.sourceId
+
+		this.sendPresenterCommand('toggleThumbs', {
+			sourceId: endpointId,
+			connectionId: connectionId,
+			enable: true,
+		})
+
+		this._subscribeThumbnailChannel(connectionId, endpointId)
 	}
 
 	unsubscribeConnectionThumbnail(feedback) {
-		let connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
-		if (connection && this.socket) {
-			let connectionId = feedback.options.connection
-			let endpointId = connection.sourceId
-			if (this.socket.isSubscribed(`/thumbs/${endpointId}/${connectionId}/0`)) {
-				this.socket.unsubscribe(`/thumbs/${endpointId}/${connectionId}/0`)
-			}
-		}
+		const connection = this.states.connections?.find(({ id }) => id === feedback.options.connection)
+		if (!connection || !this.socket || !connection.sourceId) return
+
+		const connectionId = feedback.options.connection
+		const endpointId = connection.sourceId
+
+		this._unsubscribeThumbnailChannel(connectionId, endpointId)
 	}
 
-	async generateThumbnails(connectionId, endpointId, data, source) {
-		try {
-			// Validate that the data is a Base64-encoded string
-			if (!/^data:image\/jpg;base64,[A-Za-z0-9+/=]+$/.test(data)) {
-				this.log('debug', 'Invalid Base64 thumbnail data received')
-				return
-			}
-			const base64String = data.replace(/^data:image\/jpg;base64,/, '')
-			if (source) {
-				this.states.thumbnails[connectionId + `_${source}`] = base64String
-			} else {
-				this.states.thumbnails[connectionId] = base64String
-			}
+	generateThumbnails(connectionId, endpointId, data, source) {
+		if (!data || typeof data !== 'string') {
+			this.log('debug', `Invalid thumbnail data received for connection ${connectionId}`)
+			return
+		}
 
+		// Validate that the data is a Base64-encoded string
+		if (!/^data:image\/jpg;base64,[A-Za-z0-9+/=]+$/.test(data)) {
+			this.log('debug', `Invalid Base64 thumbnail data format for connection ${connectionId}`)
+			return
+		}
+
+		try {
+			const base64String = data.replace(/^data:image\/jpg;base64,/, '')
+			const thumbnailKey = source ? `${connectionId}_${source}` : connectionId
+			
+			this.states.thumbnails[thumbnailKey] = base64String
 			this.checkFeedbacks('presenterThumbnail', 'connectionThumbnail')
 		} catch (error) {
-			this.log('debug', `Failed to generate thumbnails for connection ${connectionId}: ${error.message}`)
+			this.log('debug', `Failed to process thumbnail for connection ${connectionId}: ${error.message}`)
 		}
 	}
 }
